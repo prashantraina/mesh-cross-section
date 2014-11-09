@@ -9,7 +9,7 @@
 #endif
 
 #include "resource.h"		// main symbols
-
+#include "IsoSelectDlg.h"
 
 // CIsoSelectApp:
 // See IsoSelect.cpp for the implementation of this class
@@ -19,6 +19,8 @@ class CIsoSelectApp : public CWinApp
 {
 public:
 	CIsoSelectApp();
+	bool update;
+	CIsoSelectDlg *m_pTheDialog;
 
 // Overrides
 public:
@@ -27,6 +29,8 @@ public:
 // Implementation
 
 	DECLARE_MESSAGE_MAP()
+	virtual BOOL OnIdle(LONG lCount);
+	virtual int ExitInstance();
 };
 
 extern CIsoSelectApp theApp;

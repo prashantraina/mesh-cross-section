@@ -22,7 +22,8 @@ END_MESSAGE_MAP()
 
 CIsoSelectApp::CIsoSelectApp()
 {
-	// TODO: add construction code here,
+	this->update = true;
+
 	// Place all significant initialization in InitInstance
 }
 
@@ -49,14 +50,14 @@ BOOL CIsoSelectApp::InitInstance()
 	CWinApp::InitInstance();
 
 
-	AfxEnableControlContainer();
+	//AfxEnableControlContainer();
 
 	// Create the shell manager, in case the dialog contains
 	// any shell tree view or shell list view controls.
 	CShellManager *pShellManager = new CShellManager;
 
 	// Activate "Windows Native" visual manager for enabling themes in MFC controls
-	CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
+	//CMFCVisualManager::SetDefaultManager(RUNTIME_CLASS(CMFCVisualManagerWindows));
 
 	// Standard initialization
 	// If you are not using these features and wish to reduce the size
@@ -65,12 +66,13 @@ BOOL CIsoSelectApp::InitInstance()
 	// Change the registry key under which our settings are stored
 	// TODO: You should modify this string to be something appropriate
 	// such as the name of your company or organization
-	SetRegistryKey(_T("Local AppWizard-Generated Applications"));
+	//SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
-	CIsoSelectDlg dlg;
-	m_pMainWnd = &dlg;
-	INT_PTR nResponse = dlg.DoModal();
-	if (nResponse == IDOK)
+	m_pTheDialog = new CIsoSelectDlg;
+	m_pMainWnd = m_pTheDialog;
+	m_pTheDialog->Create(IDD_ISOSELECT_DIALOG, NULL);
+	//INT_PTR nResponse = dlg->DoModal();
+	/*if (nResponse == IDOK)
 	{
 		// TODO: Place code here to handle when the dialog is
 		//  dismissed with OK
@@ -84,7 +86,7 @@ BOOL CIsoSelectApp::InitInstance()
 	{
 		TRACE(traceAppMsg, 0, "Warning: dialog creation failed, so application is terminating unexpectedly.\n");
 		TRACE(traceAppMsg, 0, "Warning: if you are using MFC controls on the dialog, you cannot #define _AFX_NO_MFC_CONTROLS_IN_DIALOGS.\n");
-	}
+	}*/
 
 	// Delete the shell manager created above.
 	if (pShellManager != NULL)
@@ -92,8 +94,37 @@ BOOL CIsoSelectApp::InitInstance()
 		delete pShellManager;
 	}
 
-	// Since the dialog has been closed, return FALSE so that we exit the
-	//  application, rather than start the application's message pump.
+	return TRUE;
+}
+
+
+
+BOOL CIsoSelectApp::OnIdle(LONG lCount)
+{
+	if (m_pMainWnd->IsIconic())
+		return FALSE;
+
+	if (update)
+	{
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		::SwapBuffers(*m_pTheDialog->m_viewportCtl.GetDC());
+
+		update = false;
+		return TRUE;
+	}
+
 	return FALSE;
 }
 
+
+int CIsoSelectApp::ExitInstance()
+{
+	if (m_pMainWnd)
+	{
+		delete m_pMainWnd;
+	}
+
+	return CWinApp::ExitInstance();
+}
