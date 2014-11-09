@@ -204,6 +204,8 @@ void CIsoSelectDlg::OnSize(UINT nType, int cx, int cy)
 
 	if (m_hGLRenderContext)
 	{
+		//m_viewportCtl.MoveWindow(10, 10, (cx * 4) / 5, cy - 20);
+
 		CRect rc;
 		m_viewportCtl.GetClientRect(&rc);
 
