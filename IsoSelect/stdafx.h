@@ -41,8 +41,10 @@
 #include <GL/glew.h>
 #include <GL/glcorearb.h>
 #include <GLM/glm.hpp>
-
-
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <unordered_map>
 
 
 #ifdef _UNICODE

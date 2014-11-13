@@ -196,6 +196,7 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="glhelpers.h" />
     <ClInclude Include="IsoSelect.h" />
     <ClInclude Include="IsoSelectDlg.h" />
     <ClInclude Include="Resource.h" />
@@ -203,6 +204,7 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="glhelpers.cpp" />
     <ClCompile Include="IsoSelect.cpp" />
     <ClCompile Include="IsoSelectDlg.cpp" />
     <ClCompile Include="stdafx.cpp">
