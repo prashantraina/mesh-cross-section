@@ -8,15 +8,26 @@
 
 # Build results
 
-[Dd]ebug/
-[Rr]elease/
-x64/
-build/
+/[Dd]ebug/
+*/[Dd]ebug/
+/[Rr]elease/
+*/[Rr]elease/
+#x64/
+#build/
 [Bb]in/
 [Oo]bj/
 
 # Enable "build/" folder in the NuGet Packages folder since NuGet packages use it for MSBuild targets
 !packages/*/build/
+
+!**/lib/*/[Dd]ebug/
+!**/lib/*/[Rr]elease/
+!**/lib/[Dd]ebug/
+!**/lib/[Rr]elease/
+!**/lib/*x64/
+!**/ThirdParty/*/[Bb]in/
+!**/ThirdParty/*/build/
+!*.lib
 
 # MSTest test Results
 [Tt]est[Rr]esult*/
@@ -154,3 +165,13 @@ $RECYCLE.BIN/
 
 # Mac desktop service store files
 .DS_Store
+/ThirdParty/glew-1.10.0/doc
+/ThirdParty/glfw-3.0.4/CMake
+/ThirdParty/glfw-3.0.4/docs
+/ThirdParty/glfw-3.0.4/examples
+/ThirdParty/glfw-3.0.4/src
+/ThirdParty/glfw-3.0.4/tests
+/ThirdParty/glm/doc
+/ThirdParty/glm/test
+/ThirdParty/glm/cmake
+/ThirdParty/glm/util
