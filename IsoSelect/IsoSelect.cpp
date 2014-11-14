@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "IsoSelect.h"
 #include "IsoSelectDlg.h"
+#include "marchingcubes.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -102,21 +103,22 @@ void CIsoSelectApp::InitScene()
 
 	worldMat = glm::mat4(1.0f);
 	viewMat = glm::lookAt(
-		glm::vec3(100, 100, 100),	//eye
+		glm::vec3(256, 256, 256),	//eye
 		glm::vec3(0, 0, 0),			//at
 		glm::vec3(0, 1, 0));		//up
 	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 1000.0f);
 
 	VertexShader vs(L"instanceCube.vertexshader");
 	FragmentShader fs(L"solidColor.fragmentshader");
+	GeometryShader gs(L"marchingCubes.geometryshader");
 
-	marchingCubes.reset(new GPUProgram(vs, fs));
+	marchingCubes.reset(new GPUProgram(vs, fs, gs));
 
 	marchingCubes->bind();
 	glUniformMatrix4fv((*marchingCubes)["world"], 1, GL_FALSE, &worldMat[0][0]);
 	glUniformMatrix4fv((*marchingCubes)["view"], 1, GL_FALSE, &viewMat[0][0]);
 	glUniformMatrix4fv((*marchingCubes)["projection"], 1, GL_FALSE, &projMat[0][0]);
-	glUniform3i((*marchingCubes)["dims"], 32, 32, 32);
+	glUniform3i((*marchingCubes)["dims"], 128, 128, 128);
 
 
 	glGenBuffers(1, &vertexBuffer);
@@ -133,6 +135,42 @@ void CIsoSelectApp::InitScene()
 		sizeof(float), // stride
 		nullptr      // array buffer offset
 		);
+
+	triTableTex.reset(new Texture2D(GL_TEXTURE1, GL_NEAREST, GL_NEAREST, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE,
+		16, 256, GL_ALPHA16, GL_ALPHA, GL_INT, tri_table));
+
+	std::ifstream inDump(L"../600k.dmp", std::ios::binary);
+	if (inDump.is_open())
+	{
+		inDump.seekg(0, std::ios::end);
+		std::streamsize size = inDump.tellg();
+		inDump.seekg(0, std::ios::beg);
+
+		size_t BytecodeLength = size;
+		char *Bytecode = new char[BytecodeLength];
+
+		if (!inDump.read(Bytecode, size))
+		{
+			delete[] Bytecode;
+			inDump.close();
+			throw "unable to read file";
+		}
+
+		volumeTex.reset(new Texture3D(GL_TEXTURE0, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER,
+			GL_CLAMP_TO_BORDER, 256, 256, 256, GL_R32F, GL_RED, GL_FLOAT, Bytecode));
+
+		delete[] Bytecode;
+		inDump.close();
+	}
+	else
+	{
+		throw "unable to open file";
+	}
+
+	triTableTex->BindToUniform((*marchingCubes)["tritable"]);
+	volumeTex->BindToUniform((*marchingCubes)["volume"]);
+
+	glUniform1f((*marchingCubes)["iso"], -0.98f);
 }
 
 
@@ -150,7 +188,7 @@ BOOL CIsoSelectApp::OnIdle(LONG lCount)
 		glBindVertexArray(vertexArray);
 		glEnableVertexAttribArray(0);
 		glPointSize(1.0f);
-		glDrawArraysInstanced(GL_POINTS, 0, 1, 32 * 32 * 32);
+		glDrawArraysInstanced(GL_POINTS, 0, 1, 1 << 21);
 
 		::SwapBuffers(*m_pTheDialog->m_viewportCtl.GetDC());
 

@@ -140,7 +140,7 @@ BOOL CIsoSelectDlg::OnInitDialog()
 		exit(-1);
 	}
 
-	glClearColor(0, 0.4f, 0.7f, 1.0f);
+	glClearColor(0.4, 0.7f, 0.9f, 1.0f);
 
 	theApp.InitScene();
 

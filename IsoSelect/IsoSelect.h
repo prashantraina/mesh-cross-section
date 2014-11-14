@@ -26,6 +26,8 @@ public:
 	GLuint vertexArray;
 	glm::mat4 worldMat, viewMat, projMat;
 	std::unique_ptr<GPUProgram> marchingCubes;
+	std::unique_ptr<Texture2D> triTableTex;
+	std::unique_ptr<Texture3D> volumeTex;
 
 	void InitScene();
 

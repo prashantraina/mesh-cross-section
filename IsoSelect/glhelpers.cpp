@@ -24,6 +24,24 @@ void XTrace(LPCSTR lpszFormat, ...)
 #define XTRACE
 #endif
 
+#define printOpenGLError() printOglError(__FILE__, __LINE__)
+
+int printOglError(char *file, int line)
+{
+
+	GLenum glErr;
+	int    retCode = 0;
+
+	glErr = glGetError();
+	if (glErr != GL_NO_ERROR)
+	{
+		XTRACE("glError in file %s @ line %d: %s\n",
+			file, line, gluErrorString(glErr));
+		retCode = 1;
+	}
+	return retCode;
+}
+
 
 GLuint Shader::LoadShader(GLenum shaderType, const wchar_t *path)
 {
@@ -190,7 +208,7 @@ Texture::Texture(GLenum type, GLenum slot, GLint magfilter, GLint minFilter,
 	glTexParameteri(textureType, GL_TEXTURE_MAG_FILTER, magfilter);
 	glTexParameteri(textureType, GL_TEXTURE_WRAP_S, wrapS);
 	glTexParameteri(textureType, GL_TEXTURE_WRAP_T, wrapT);
-	glTexParameteri(textureType, GL_TEXTURE_WRAP_R, wrapR);
+	printOpenGLError();
 }
 
 Texture::~Texture()
@@ -221,7 +239,8 @@ Texture2D::Texture2D(GLenum slot, GLint magfilter, GLint minFilter,
 	const GLvoid *data) : Texture(GL_TEXTURE_2D, slot, magfilter, minFilter, wrapS, wrapT,
 	GL_CLAMP_TO_EDGE)
 {
-	glTexImage2D(slot, 0, internalFormat, width, height, 0, format, colorType, data);
+	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, colorType, data);
+	printOpenGLError();
 }
 
 Texture3D::Texture3D(GLenum slot, GLint magfilter, GLint minFilter,
@@ -231,6 +250,9 @@ Texture3D::Texture3D(GLenum slot, GLint magfilter, GLint minFilter,
 	const GLvoid *data) : Texture(GL_TEXTURE_3D, slot, magfilter, minFilter, wrapS, wrapT,
 	wrapR)
 {
+	glTexParameteri(textureType, GL_TEXTURE_WRAP_R, wrapR);
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-	glTexImage3D(slot, 0, internalFormat, width, height, depth, 0, format, colorType, data);
+	printOpenGLError();
+	glTexImage3D(GL_TEXTURE_3D, 0, internalFormat, width, height, depth, 0, format, colorType, data);
+	printOpenGLError();
 }

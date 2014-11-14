@@ -1,16 +1,19 @@
+#version 430
+
 layout(points) in;
-layout(triangle_strip) out;
-layout(max_vertices = 15) out; // 15 = 5 triangles * 3 vertices per triangle
+layout(triangle_strip, max_vertices = 15) out;// 15 = 5 triangles * 3 vertices per triangle
 
 uniform mat4 projection;
-uniform mat4 modelview;
+uniform mat4 world;
+uniform mat4 view;
 uniform sampler3D volume;
 uniform isampler2D tritable;
 uniform ivec3 dims;
 uniform float iso;
-const float gap = 0.5f;
-out vec4 position_model;
-out vec3 normal_model;
+const float gap = 0.5;
+//out vec4 position_model;
+//out vec3 normal_model;
+out vec3 normal;
 vec3 scale;
 
 vec4 interp(vec3 fore, vec3 aft, float fore_intensity, float aft_intensity, float iso) {
@@ -19,8 +22,8 @@ vec4 interp(vec3 fore, vec3 aft, float fore_intensity, float aft_intensity, floa
 }
 
 void issue(vec4 position) {
-  position_model = position;
-  gl_Position = projection * modelview * position_model;
+  vec4 position_model = position;
+  gl_Position = projection * view * world * position_model;
 
   vec3 texcoord = position.xyz * scale;
   float here = texture(volume, texcoord).r;
@@ -29,7 +32,8 @@ void issue(vec4 position) {
   float next_z = textureOffset(volume, texcoord, ivec3(0, 0, 1)).r;
   vec3 grad = vec3(next_x - here, next_y - here, next_z - here);
 
-  normal_model = normalize(grad);
+  vec3 normal_model = normalize(grad);
+  normal = normalize(view * world * vec4(normal_model, 1)).xyz;
   EmitVertex();
 }
 
@@ -81,12 +85,13 @@ void main() {
   intersections[ 9] = interp(Xyz, XyZ, Xyz_intensity, XyZ_intensity, iso);
   intersections[10] = interp(xYz, xYZ, xYz_intensity, xYZ_intensity, iso);
   intersections[11] = interp(XYz, XYZ, XYz_intensity, XYZ_intensity, iso);
-
+  
   // Issue triangles
   int i = 0;
   while (true) {
     int ti = texelFetch(tritable, ivec2(i, bitfield), 0).a;
-    if (ti == -1) break;
+	//if(ti == -1){while (true) {}}
+    //if (ti == -1) break;
     issue(intersections[ti]);
 
     ti = texelFetch(tritable, ivec2(i + 1, bitfield), 0).a;
