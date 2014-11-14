@@ -1,3 +1,5 @@
+#pragma once
+
 #include "stdafx.h"
 
 class AbstractShader;
@@ -74,7 +76,7 @@ public:
 	void bind() const;
 	GLuint getId() const;
 	//get uniform ID
-	GLuint operator[] (std::string&& name) const;
+	GLuint operator[] (const char* name) const;
 };
 
 class Texture

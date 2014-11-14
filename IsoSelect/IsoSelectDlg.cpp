@@ -132,7 +132,17 @@ BOOL CIsoSelectDlg::OnInitDialog()
 	m_hGLRenderContext = wglCreateContext(*m_viewportCtl.GetDC());
 	wglMakeCurrent(*m_viewportCtl.GetDC(), m_hGLRenderContext);
 
+	glewExperimental = true; // Needed for core profile
+	if (glewInit() != GLEW_OK) {
+		fprintf(stderr, "Failed to initialize GLEW\n");
+
+		getchar();
+		exit(-1);
+	}
+
 	glClearColor(0, 0.4f, 0.7f, 1.0f);
+
+	theApp.InitScene();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }

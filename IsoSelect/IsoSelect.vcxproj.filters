@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{954491ee-d5ca-4c91-99f1-1bb9e6eac235}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -34,6 +37,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="glhelpers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="marchingcubes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -59,6 +65,15 @@
   <ItemGroup>
     <None Include="res\IsoSelect.rc2">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="instanceCube.vertexshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="solidColor.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="pointToSquare.geometryshader">
+      <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

@@ -9,6 +9,8 @@
 #define VC_EXTRALEAN            // Exclude rarely-used stuff from Windows headers
 #endif
 
+#define _AFXDLL
+
 //#define NOMINMAX
 //#include <algorithm>
 
@@ -41,10 +43,12 @@
 #include <GL/glew.h>
 #include <GL/glcorearb.h>
 #include <GLM/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <string>
 #include <iostream>
 #include <fstream>
 #include <unordered_map>
+#include <memory>
 
 
 #ifdef _UNICODE

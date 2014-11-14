@@ -97,6 +97,43 @@ BOOL CIsoSelectApp::InitInstance()
 	return TRUE;
 }
 
+void CIsoSelectApp::InitScene()
+{
+
+	worldMat = glm::mat4(1.0f);
+	viewMat = glm::lookAt(
+		glm::vec3(100, 100, 100),	//eye
+		glm::vec3(0, 0, 0),			//at
+		glm::vec3(0, 1, 0));		//up
+	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 1000.0f);
+
+	VertexShader vs(L"instanceCube.vertexshader");
+	FragmentShader fs(L"solidColor.fragmentshader");
+
+	marchingCubes.reset(new GPUProgram(vs, fs));
+
+	marchingCubes->bind();
+	glUniformMatrix4fv((*marchingCubes)["world"], 1, GL_FALSE, &worldMat[0][0]);
+	glUniformMatrix4fv((*marchingCubes)["view"], 1, GL_FALSE, &viewMat[0][0]);
+	glUniformMatrix4fv((*marchingCubes)["projection"], 1, GL_FALSE, &projMat[0][0]);
+	glUniform3i((*marchingCubes)["dims"], 32, 32, 32);
+
+
+	glGenBuffers(1, &vertexBuffer);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	float dummy[] = { 0.0f };
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float), dummy, GL_STATIC_DRAW);
+	glGenVertexArrays(1, &vertexArray);
+	glBindVertexArray(vertexArray);
+
+	glVertexAttribPointer(0, //location
+		1,				// number of components
+		GL_FLOAT,		// type
+		GL_FALSE,		// normalized?
+		sizeof(float), // stride
+		nullptr      // array buffer offset
+		);
+}
 
 
 BOOL CIsoSelectApp::OnIdle(LONG lCount)
@@ -108,6 +145,12 @@ BOOL CIsoSelectApp::OnIdle(LONG lCount)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		marchingCubes->bind();
+
+		glBindVertexArray(vertexArray);
+		glEnableVertexAttribArray(0);
+		glPointSize(10.0f);
+		glDrawArraysInstanced(GL_POINTS, 0, 1, 32 * 32 * 32);
 
 		::SwapBuffers(*m_pTheDialog->m_viewportCtl.GetDC());
 
@@ -125,6 +168,11 @@ int CIsoSelectApp::ExitInstance()
 	{
 		delete m_pMainWnd;
 	}
+
+	marchingCubes.reset();
+
+	glDeleteVertexArrays(1, &vertexArray);
+	glDeleteBuffers(1, &vertexBuffer);
 
 	return CWinApp::ExitInstance();
 }

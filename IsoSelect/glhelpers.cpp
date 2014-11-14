@@ -1,6 +1,30 @@
 #include "stdafx.h"
 #include "glhelpers.h"
 
+
+void XTrace0(LPCSTR lpszText)
+{
+	::OutputDebugStringA(lpszText);
+}
+
+void XTrace(LPCSTR lpszFormat, ...)
+{
+	va_list args;
+	va_start(args, lpszFormat);
+	int nBuf;
+	char szBuffer[512]; // get rid of this hard-coded buffer
+	nBuf = _vsnprintf_s(szBuffer, 511, 512, lpszFormat, args);
+	::OutputDebugStringA(szBuffer);
+	va_end(args);
+}
+
+#ifdef _DEBUG
+#define XTRACE XTrace
+#else
+#define XTRACE
+#endif
+
+
 GLuint Shader::LoadShader(GLenum shaderType, const wchar_t *path)
 {
 	GLuint id = glCreateShader(shaderType);
@@ -14,12 +38,12 @@ GLuint Shader::LoadShader(GLenum shaderType, const wchar_t *path)
 		shaderStream.close();
 	}
 	else{
-		printf("Impossible to open %ls. Are you in the right directory ?\n", path);
+		XTRACE("Impossible to open %ls. Are you in the right directory ?\n", path);
 		getchar();
 		return 0;
 	}
 
-	printf("Compiling shader : %ls\n", path);
+	XTRACE("Compiling shader : %ls\n", path);
 
 	const char *sourcePointer = shaderCode.c_str();
 	glShaderSource(id, 1, &sourcePointer, NULL);
@@ -33,7 +57,7 @@ GLuint Shader::LoadShader(GLenum shaderType, const wchar_t *path)
 	if (infoLogLength > 0){
 		char *errorMessage = new char[infoLogLength + 1];
 		glGetShaderInfoLog(id, infoLogLength, NULL, errorMessage);
-		printf("%s\n", errorMessage);
+		XTRACE("%s\n", errorMessage);
 		delete errorMessage;
 	}
 
@@ -74,7 +98,7 @@ void GPUProgram::checkProgram() const
 	if (infoLogLength > 0){
 		char *errorMessage = new char[infoLogLength + 1];
 		glGetProgramInfoLog(programID, infoLogLength, NULL, errorMessage);
-		printf("%s\n", errorMessage);
+		XTRACE("%s\n", errorMessage);
 		delete errorMessage;
 	}
 }
@@ -149,9 +173,9 @@ GLuint GPUProgram::lookupUniform(std::string name) const
 	return uniformLocations[name];
 }
 
-GLuint GPUProgram::operator[] (std::string&& name) const
+GLuint GPUProgram::operator[] (const char* name) const
 {
-	return lookupUniform(std::forward<std::string>(name));
+	return lookupUniform(name);
 }
 
 Texture::Texture(GLenum type, GLenum slot, GLint magfilter, GLint minFilter,
@@ -207,5 +231,6 @@ Texture3D::Texture3D(GLenum slot, GLint magfilter, GLint minFilter,
 	const GLvoid *data) : Texture(GL_TEXTURE_3D, slot, magfilter, minFilter, wrapS, wrapT,
 	wrapR)
 {
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 	glTexImage3D(slot, 0, internalFormat, width, height, depth, 0, format, colorType, data);
 }

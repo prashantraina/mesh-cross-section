@@ -10,6 +10,7 @@
 
 #include "resource.h"		// main symbols
 #include "IsoSelectDlg.h"
+#include "glhelpers.h"
 
 // CIsoSelectApp:
 // See IsoSelect.cpp for the implementation of this class
@@ -21,6 +22,12 @@ public:
 	CIsoSelectApp();
 	bool update;
 	CIsoSelectDlg *m_pTheDialog;
+	GLuint vertexBuffer;
+	GLuint vertexArray;
+	glm::mat4 worldMat, viewMat, projMat;
+	std::unique_ptr<GPUProgram> marchingCubes;
+
+	void InitScene();
 
 // Overrides
 public:

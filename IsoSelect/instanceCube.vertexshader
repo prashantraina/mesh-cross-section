@@ -1,0 +1,16 @@
+#version 430
+
+uniform ivec3 dims;
+uniform mat4 world;
+uniform mat4 view;
+uniform mat4 projection;
+
+in float vposition;
+
+void main() {
+  vec3 position_model = vec3(mod(gl_InstanceID, dims[0]),
+                             int(mod(gl_InstanceID, dims[0] * dims[1])) / dims[0],
+                             gl_InstanceID / (dims[0] * dims[1]));
+  position_model.x += vposition; // this is unnecessarily necessary
+  gl_Position = projection * view * world * vec4(position_model, 1.0);
+}
