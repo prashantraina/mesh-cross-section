@@ -75,6 +75,9 @@
     <None Include="pointToSquare.geometryshader">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="marchingCubes.geometryshader">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\IsoSelect.ico">

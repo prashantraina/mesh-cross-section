@@ -1,0 +1,101 @@
+layout(points) in;
+layout(triangle_strip) out;
+layout(max_vertices = 15) out; // 15 = 5 triangles * 3 vertices per triangle
+
+uniform mat4 projection;
+uniform mat4 modelview;
+uniform sampler3D volume;
+uniform isampler2D tritable;
+uniform ivec3 dims;
+uniform float iso;
+const float gap = 0.5f;
+out vec4 position_model;
+out vec3 normal_model;
+vec3 scale;
+
+vec4 interp(vec3 fore, vec3 aft, float fore_intensity, float aft_intensity, float iso) {
+  float percent = (iso - fore_intensity) / (aft_intensity - fore_intensity);
+  return vec4(fore + (aft - fore) * percent, 1.0);
+}
+
+void issue(vec4 position) {
+  position_model = position;
+  gl_Position = projection * modelview * position_model;
+
+  vec3 texcoord = position.xyz * scale;
+  float here = texture(volume, texcoord).r;
+  float next_x = textureOffset(volume, texcoord, ivec3(1, 0, 0)).r;
+  float next_y = textureOffset(volume, texcoord, ivec3(0, 1, 0)).r;
+  float next_z = textureOffset(volume, texcoord, ivec3(0, 0, 1)).r;
+  vec3 grad = vec3(next_x - here, next_y - here, next_z - here);
+
+  normal_model = normalize(grad);
+  EmitVertex();
+}
+
+void main() {
+  vec3 xyz = gl_in[0].gl_Position.xyz + vec3(-gap, -gap, -gap);
+  vec3 Xyz = gl_in[0].gl_Position.xyz + vec3( gap, -gap, -gap);
+  vec3 xYz = gl_in[0].gl_Position.xyz + vec3(-gap,  gap, -gap);
+  vec3 XYz = gl_in[0].gl_Position.xyz + vec3( gap,  gap, -gap);
+  vec3 xyZ = gl_in[0].gl_Position.xyz + vec3(-gap, -gap,  gap);
+  vec3 XyZ = gl_in[0].gl_Position.xyz + vec3( gap, -gap,  gap);
+  vec3 xYZ = gl_in[0].gl_Position.xyz + vec3(-gap,  gap,  gap);
+  vec3 XYZ = gl_in[0].gl_Position.xyz + vec3( gap,  gap,  gap);
+
+  scale = 1.0 / dims;
+
+  float xyz_intensity = texture(volume, xyz * scale).r;
+  float Xyz_intensity = texture(volume, Xyz * scale).r;
+  float xYz_intensity = texture(volume, xYz * scale).r;
+  float XYz_intensity = texture(volume, XYz * scale).r;
+  float xyZ_intensity = texture(volume, xyZ * scale).r;
+  float XyZ_intensity = texture(volume, XyZ * scale).r;
+  float xYZ_intensity = texture(volume, xYZ * scale).r;
+  float XYZ_intensity = texture(volume, XYZ * scale).r;
+
+  // Compose bitfield
+  int bitfield = 0;
+  bitfield += int(xyz_intensity >= iso) * 1; 
+  bitfield += int(Xyz_intensity >= iso) * 2; 
+  bitfield += int(xYz_intensity >= iso) * 4; 
+  bitfield += int(XYz_intensity >= iso) * 8; 
+  bitfield += int(xyZ_intensity >= iso) * 16; 
+  bitfield += int(XyZ_intensity >= iso) * 32; 
+  bitfield += int(xYZ_intensity >= iso) * 64; 
+  bitfield += int(XYZ_intensity >= iso) * 128; 
+
+  // Intersect each edge
+  vec4 intersections[12];
+  intersections[ 0] = interp(xyz, Xyz, xyz_intensity, Xyz_intensity, iso);
+  intersections[ 1] = interp(xYz, XYz, xYz_intensity, XYz_intensity, iso);
+  intersections[ 2] = interp(xyZ, XyZ, xyZ_intensity, XyZ_intensity, iso);
+  intersections[ 3] = interp(xYZ, XYZ, xYZ_intensity, XYZ_intensity, iso);
+
+  intersections[ 4] = interp(xyz, xYz, xyz_intensity, xYz_intensity, iso);
+  intersections[ 5] = interp(Xyz, XYz, Xyz_intensity, XYz_intensity, iso);
+  intersections[ 6] = interp(xyZ, xYZ, xyZ_intensity, xYZ_intensity, iso);
+  intersections[ 7] = interp(XyZ, XYZ, XyZ_intensity, XYZ_intensity, iso);
+
+  intersections[ 8] = interp(xyz, xyZ, xyz_intensity, xyZ_intensity, iso);
+  intersections[ 9] = interp(Xyz, XyZ, Xyz_intensity, XyZ_intensity, iso);
+  intersections[10] = interp(xYz, xYZ, xYz_intensity, xYZ_intensity, iso);
+  intersections[11] = interp(XYz, XYZ, XYz_intensity, XYZ_intensity, iso);
+
+  // Issue triangles
+  int i = 0;
+  while (true) {
+    int ti = texelFetch(tritable, ivec2(i, bitfield), 0).a;
+    if (ti == -1) break;
+    issue(intersections[ti]);
+
+    ti = texelFetch(tritable, ivec2(i + 1, bitfield), 0).a;
+    issue(intersections[ti]);
+
+    ti = texelFetch(tritable, ivec2(i + 2, bitfield), 0).a;
+    issue(intersections[ti]);
+
+    EndPrimitive();
+    i += 3;
+  }
+}

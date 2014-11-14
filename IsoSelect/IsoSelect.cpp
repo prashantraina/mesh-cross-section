@@ -149,7 +149,7 @@ BOOL CIsoSelectApp::OnIdle(LONG lCount)
 
 		glBindVertexArray(vertexArray);
 		glEnableVertexAttribArray(0);
-		glPointSize(10.0f);
+		glPointSize(1.0f);
 		glDrawArraysInstanced(GL_POINTS, 0, 1, 32 * 32 * 32);
 
 		::SwapBuffers(*m_pTheDialog->m_viewportCtl.GetDC());
