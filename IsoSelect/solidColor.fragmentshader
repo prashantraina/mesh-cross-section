@@ -2,11 +2,23 @@
 
 
 //in float intensity;
+in vec3 baryCoords;
 out vec4 color;
 
 void main() {
 	/*if(intensity < 0.1)
-	{discard;
+	{
+		discard;
 	}*/
-  color = vec4(/*intensity **/ 1.0, 0.0, 0.0, 1.0);
+	float outlineWidth = 0.01;
+
+	if(baryCoords.x < outlineWidth*2 || baryCoords.y < outlineWidth*2 || baryCoords.z < outlineWidth*2)
+	{
+		color = mix(vec4(1.0,0.0,0.0, 1.0), vec4(0.0,0.0,0.0, 1.0), 
+			pow(((outlineWidth*2 - min(baryCoords.x, min(baryCoords.y,  baryCoords.z))) / (outlineWidth*2)), 0.7));
+	}
+	else
+	{
+		color = vec4(/*intensity **/ 1.0, 0.0, 0.0, 1.0);
+	}
 }

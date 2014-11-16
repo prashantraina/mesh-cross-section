@@ -12,10 +12,12 @@ void XTrace(LPCSTR lpszFormat, ...)
 	va_list args;
 	va_start(args, lpszFormat);
 	int nBuf;
-	char szBuffer[512]; // get rid of this hard-coded buffer
-	nBuf = _vsnprintf_s(szBuffer, 511, 512, lpszFormat, args);
-	::OutputDebugStringA(szBuffer);
+	static const size_t bufSize = 4096;
+	char *szBuffer = new char[bufSize];
+	nBuf = _vsnprintf_s(szBuffer, bufSize, _TRUNCATE, lpszFormat, args);
 	va_end(args);
+	::OutputDebugStringA(szBuffer);
+	delete szBuffer;
 }
 
 #ifdef _DEBUG
@@ -24,6 +26,7 @@ void XTrace(LPCSTR lpszFormat, ...)
 #define XTRACE
 #endif
 
+#ifdef _DEBUG
 #define printOpenGLError() printOglError(__FILE__, __LINE__)
 
 int printOglError(char *file, int line)
@@ -42,6 +45,9 @@ int printOglError(char *file, int line)
 	return retCode;
 }
 
+#else
+#define printOpenGLError()
+#endif
 
 GLuint Shader::LoadShader(GLenum shaderType, const wchar_t *path)
 {
@@ -219,8 +225,11 @@ Texture::~Texture()
 void Texture::BindToUniform(GLuint location) const
 {
 	glActiveTexture(textureSlot);
+	printOpenGLError();
 	glBindTexture(textureType, textureId);
+	printOpenGLError();
 	glUniform1i(location, getSlotNumber());
+	printOpenGLError();
 }
 
 GLint Texture::getSlotNumber() const
@@ -239,6 +248,7 @@ Texture2D::Texture2D(GLenum slot, GLint magfilter, GLint minFilter,
 	const GLvoid *data) : Texture(GL_TEXTURE_2D, slot, magfilter, minFilter, wrapS, wrapT,
 	GL_CLAMP_TO_EDGE)
 {
+	glTexParameteri(textureType, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, format, colorType, data);
 	printOpenGLError();
 }

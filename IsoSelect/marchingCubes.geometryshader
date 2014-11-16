@@ -13,19 +13,31 @@ uniform float iso;
 const float gap = 0.5;
 //out vec4 position_model;
 //out vec3 normal_model;
+out vec3 baryCoords;
 out vec3 normal;
 vec3 scale;
 
-vec4 interp(vec3 fore, vec3 aft, float fore_intensity, float aft_intensity, float iso) {
-  float percent = (iso - fore_intensity) / (aft_intensity - fore_intensity);
-  return vec4(fore + (aft - fore) * percent, 1.0);
+vec4 interp(vec3 fore, vec3 aft, float fore_intensity, float aft_intensity, float iso) 
+{
+  float percent;
+  if(abs(aft_intensity - fore_intensity) < 0.001)
+  {
+	percent = 0.5;
+  }
+  else
+  {
+	percent = (iso - fore_intensity) / (aft_intensity - fore_intensity);
+  }
+  return vec4(mix(fore, aft, percent),1);
+  //return vec4(fore + (aft - fore) * percent, 1.0);
+  //return vec4((fore + aft) / 2.0, 1);
 }
 
 void issue(vec4 position) {
   vec4 position_model = position;
   gl_Position = projection * view * world * position_model;
 
-  vec3 texcoord = position.xyz * scale;
+  /*vec3 texcoord = position.xyz * scale;
   float here = texture(volume, texcoord).r;
   float next_x = textureOffset(volume, texcoord, ivec3(1, 0, 0)).r;
   float next_y = textureOffset(volume, texcoord, ivec3(0, 1, 0)).r;
@@ -33,11 +45,23 @@ void issue(vec4 position) {
   vec3 grad = vec3(next_x - here, next_y - here, next_z - here);
 
   vec3 normal_model = normalize(grad);
-  normal = normalize(view * world * vec4(normal_model, 1)).xyz;
+  normal = normalize(view * world * vec4(normal_model, 1)).xyz;*/
+
   EmitVertex();
 }
 
+void issue(vec3 position)
+{
+	issue(vec4(position, 1.0));
+}
+
 void main() {
+
+  /*ivec2 size = textureSize(tritable, 0);
+  if(size.x == 16 && size.y == 256) {while(true){}}*/
+
+  //if(texelFetch(tritable, ivec2(0,254), 0).r == 8){while(true){}}
+
   vec3 xyz = gl_in[0].gl_Position.xyz + vec3(-gap, -gap, -gap);
   vec3 Xyz = gl_in[0].gl_Position.xyz + vec3( gap, -gap, -gap);
   vec3 xYz = gl_in[0].gl_Position.xyz + vec3(-gap,  gap, -gap);
@@ -67,7 +91,7 @@ void main() {
   bitfield += int(xyZ_intensity >= iso) * 16; 
   bitfield += int(XyZ_intensity >= iso) * 32; 
   bitfield += int(xYZ_intensity >= iso) * 64; 
-  bitfield += int(XYZ_intensity >= iso) * 128; 
+  bitfield += int(XYZ_intensity >= iso) * 128;
 
   // Intersect each edge
   vec4 intersections[12];
@@ -88,17 +112,37 @@ void main() {
   
   // Issue triangles
   int i = 0;
-  while (true) {
-    int ti = texelFetch(tritable, ivec2(i, bitfield), 0).a;
-	//if(ti == -1){while (true) {}}
-    //if (ti == -1) break;
+  //baryCoords = vec3(1,0,0);
+   //issue(intersections[6]);
+   //issue(xyz);
+  //baryCoords = vec3(0,1,0);
+   //issue(intersections[2]);
+   //issue(XyZ);
+  //baryCoords = vec3(0,0,1);
+   //issue(intersections[8]);
+   //issue(xYz);
+    //EndPrimitive();
+  while (true) 
+  {
+    int ti = texelFetch(tritable, ivec2(i, bitfield), 0).r;
+	int ti1, ti2, ti3;
+	ti1 = ti;
+	//if(ti == 5){while (true) {}}
+    if (ti == -1) break;
+	baryCoords = vec3(1,0,0);
     issue(intersections[ti]);
 
-    ti = texelFetch(tritable, ivec2(i + 1, bitfield), 0).a;
+    ti = texelFetch(tritable, ivec2(i + 1, bitfield), 0).r;
+	ti2 = ti;
+	baryCoords = vec3(0,1,0);
     issue(intersections[ti]);
 
-    ti = texelFetch(tritable, ivec2(i + 2, bitfield), 0).a;
+    ti = texelFetch(tritable, ivec2(i + 2, bitfield), 0).r;
+	ti3 = ti;
+	 baryCoords = vec3(0,0,1);
     issue(intersections[ti]);
+
+	//if((ti1 == ti2 && ti2 == ti3) && ti1 != -1){while (true) {}}
 
     EndPrimitive();
     i += 3;

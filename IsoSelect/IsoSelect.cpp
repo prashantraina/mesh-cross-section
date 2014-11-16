@@ -100,13 +100,15 @@ BOOL CIsoSelectApp::InitInstance()
 
 void CIsoSelectApp::InitScene()
 {
+	glEnable(GL_DEPTH_TEST); 
+	glDepthFunc(GL_LEQUAL);
 
 	worldMat = glm::mat4(1.0f);
 	viewMat = glm::lookAt(
-		glm::vec3(256, 256, 256),	//eye
+		glm::vec3(512, 512, 512),	//eye
 		glm::vec3(0, 0, 0),			//at
 		glm::vec3(0, 1, 0));		//up
-	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.1f, 1000.0f);
+	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 1.0f, 1000.0f);
 
 	VertexShader vs(L"instanceCube.vertexshader");
 	FragmentShader fs(L"solidColor.fragmentshader");
@@ -118,7 +120,7 @@ void CIsoSelectApp::InitScene()
 	glUniformMatrix4fv((*marchingCubes)["world"], 1, GL_FALSE, &worldMat[0][0]);
 	glUniformMatrix4fv((*marchingCubes)["view"], 1, GL_FALSE, &viewMat[0][0]);
 	glUniformMatrix4fv((*marchingCubes)["projection"], 1, GL_FALSE, &projMat[0][0]);
-	glUniform3i((*marchingCubes)["dims"], 128, 128, 128);
+	glUniform3i((*marchingCubes)["dims"], 256, 256, 256);
 
 
 	glGenBuffers(1, &vertexBuffer);
@@ -137,7 +139,7 @@ void CIsoSelectApp::InitScene()
 		);
 
 	triTableTex.reset(new Texture2D(GL_TEXTURE1, GL_NEAREST, GL_NEAREST, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE,
-		16, 256, GL_ALPHA16, GL_ALPHA, GL_INT, tri_table));
+		16, 256, GL_R32I, GL_RED_INTEGER, GL_INT, tri_table));
 
 	std::ifstream inDump(L"../600k.dmp", std::ios::binary);
 	if (inDump.is_open())
@@ -156,8 +158,8 @@ void CIsoSelectApp::InitScene()
 			throw "unable to read file";
 		}
 
-		volumeTex.reset(new Texture3D(GL_TEXTURE0, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_BORDER, GL_CLAMP_TO_BORDER,
-			GL_CLAMP_TO_BORDER, 256, 256, 256, GL_R32F, GL_RED, GL_FLOAT, Bytecode));
+		volumeTex.reset(new Texture3D(GL_TEXTURE0, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE,
+			GL_CLAMP_TO_EDGE, 256, 256, 256, GL_R32F, GL_RED, GL_FLOAT, Bytecode));
 
 		delete[] Bytecode;
 		inDump.close();
@@ -170,7 +172,7 @@ void CIsoSelectApp::InitScene()
 	triTableTex->BindToUniform((*marchingCubes)["tritable"]);
 	volumeTex->BindToUniform((*marchingCubes)["volume"]);
 
-	glUniform1f((*marchingCubes)["iso"], -0.98f);
+	glUniform1f((*marchingCubes)["iso"], -0.4f);
 }
 
 
@@ -188,7 +190,7 @@ BOOL CIsoSelectApp::OnIdle(LONG lCount)
 		glBindVertexArray(vertexArray);
 		glEnableVertexAttribArray(0);
 		glPointSize(1.0f);
-		glDrawArraysInstanced(GL_POINTS, 0, 1, 1 << 21);
+		glDrawArraysInstanced(GL_POINTS, 0, 1, 1 << 24);
 
 		::SwapBuffers(*m_pTheDialog->m_viewportCtl.GetDC());
 
