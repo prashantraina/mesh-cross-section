@@ -5,7 +5,8 @@
 in vec3 baryCoords;
 out vec4 color;
 
-void main() {
+void main() 
+{
 	/*if(intensity < 0.1)
 	{
 		discard;

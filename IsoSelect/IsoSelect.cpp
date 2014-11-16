@@ -111,7 +111,8 @@ void CIsoSelectApp::InitScene()
 	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 1.0f, 1000.0f);
 
 	VertexShader vs(L"instanceCube.vertexshader");
-	FragmentShader fs(L"solidColor.fragmentshader");
+	//FragmentShader fs(L"solidColor.fragmentshader");
+	FragmentShader fs(L"phong.fragmentshader");
 	GeometryShader gs(L"marchingCubes.geometryshader");
 
 	marchingCubes.reset(new GPUProgram(vs, fs, gs));
@@ -121,6 +122,7 @@ void CIsoSelectApp::InitScene()
 	glUniformMatrix4fv((*marchingCubes)["view"], 1, GL_FALSE, &viewMat[0][0]);
 	glUniformMatrix4fv((*marchingCubes)["projection"], 1, GL_FALSE, &projMat[0][0]);
 	glUniform3i((*marchingCubes)["dims"], 256, 256, 256);
+	glUniform3f((*marchingCubes)["eyePos"], 512, 512, 512);
 
 
 	glGenBuffers(1, &vertexBuffer);

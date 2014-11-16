@@ -78,6 +78,9 @@
     <None Include="marchingCubes.geometryshader">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="phong.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\IsoSelect.ico">
