@@ -4,6 +4,7 @@
 
 #pragma once
 #include "afxwin.h"
+#include "afxcmn.h"
 
 
 // CIsoSelectDlg dialog
@@ -38,4 +39,7 @@ public:
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	virtual void OnOK();
 	virtual void OnCancel();
+	CSliderCtrl m_coarseSlider;
+	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
+	float m_selectedIso;
 };

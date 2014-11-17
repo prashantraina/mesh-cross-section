@@ -103,9 +103,12 @@ void CIsoSelectApp::InitScene()
 	glEnable(GL_DEPTH_TEST); 
 	glDepthFunc(GL_LEQUAL);
 
+
+	glm::vec3 eye(dim * 2);
+
 	worldMat = glm::mat4(1.0f);
 	viewMat = glm::lookAt(
-		glm::vec3(512, 512, 512),	//eye
+		eye,	//eye
 		glm::vec3(0, 0, 0),			//at
 		glm::vec3(0, 1, 0));		//up
 	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 1.0f, 1000.0f);
@@ -121,8 +124,8 @@ void CIsoSelectApp::InitScene()
 	glUniformMatrix4fv((*marchingCubes)["world"], 1, GL_FALSE, &worldMat[0][0]);
 	glUniformMatrix4fv((*marchingCubes)["view"], 1, GL_FALSE, &viewMat[0][0]);
 	glUniformMatrix4fv((*marchingCubes)["projection"], 1, GL_FALSE, &projMat[0][0]);
-	glUniform3i((*marchingCubes)["dims"], 256, 256, 256);
-	glUniform3f((*marchingCubes)["eyePos"], 512, 512, 512);
+	glUniform3i((*marchingCubes)["dims"], dim, dim, dim);
+	glUniform3fv((*marchingCubes)["eyePos"], 1, &eye.x);
 
 
 	glGenBuffers(1, &vertexBuffer);
@@ -177,6 +180,11 @@ void CIsoSelectApp::InitScene()
 	glUniform1f((*marchingCubes)["iso"], -0.4f);
 }
 
+void CIsoSelectApp::SetIsoSurface(float value)
+{
+	glUniform1f((*marchingCubes)["iso"], value);
+}
+
 
 BOOL CIsoSelectApp::OnIdle(LONG lCount)
 {
@@ -185,6 +193,9 @@ BOOL CIsoSelectApp::OnIdle(LONG lCount)
 
 	if (update)
 	{
+		LARGE_INTEGER perfFreq, start, end;
+		::QueryPerformanceFrequency(&perfFreq);
+		::QueryPerformanceCounter(&start);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		marchingCubes->bind();
@@ -192,9 +203,16 @@ BOOL CIsoSelectApp::OnIdle(LONG lCount)
 		glBindVertexArray(vertexArray);
 		glEnableVertexAttribArray(0);
 		glPointSize(1.0f);
-		glDrawArraysInstanced(GL_POINTS, 0, 1, 1 << 24);
+		glDrawArraysInstanced(GL_POINTS, 0, 1, dim * dim * dim);
 
+		glFinish();
 		::SwapBuffers(*m_pTheDialog->m_viewportCtl.GetDC());
+		::QueryPerformanceCounter(&end);
+
+		wchar_t buf[100];
+		wsprintf(buf, L"Frame time: %d ms", (int)((end.QuadPart - start.QuadPart) / (perfFreq.QuadPart / 1000.0)));
+
+		//AfxMessageBox(buf, MB_OK);
 
 		update = false;
 		return TRUE;

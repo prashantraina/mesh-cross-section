@@ -19,6 +19,7 @@
 class CIsoSelectApp : public CWinApp
 {
 public:
+	static const int dim = 128U;
 	CIsoSelectApp();
 	bool update;
 	CIsoSelectDlg *m_pTheDialog;
@@ -30,6 +31,7 @@ public:
 	std::unique_ptr<Texture3D> volumeTex;
 
 	void InitScene();
+	void SetIsoSurface(float value);
 
 // Overrides
 public:

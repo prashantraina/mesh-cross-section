@@ -49,6 +49,7 @@ END_MESSAGE_MAP()
 
 CIsoSelectDlg::CIsoSelectDlg(CWnd* pParent /*=NULL*/)
 	: CDialogEx(CIsoSelectDlg::IDD, pParent)
+	, m_selectedIso(0)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_hGLRenderContext = nullptr;
@@ -58,6 +59,9 @@ void CIsoSelectDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_VIEWPORT, m_viewportCtl);
+	DDX_Control(pDX, IDC_COARSE_SLIDER, m_coarseSlider);
+	DDX_Text(pDX, IDC_ISONUM, m_selectedIso);
+	DDV_MinMaxFloat(pDX, m_selectedIso, -2.0, 2);
 }
 
 BEGIN_MESSAGE_MAP(CIsoSelectDlg, CDialogEx)
@@ -66,6 +70,7 @@ BEGIN_MESSAGE_MAP(CIsoSelectDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
+	ON_WM_VSCROLL()
 END_MESSAGE_MAP()
 
 
@@ -131,6 +136,7 @@ BOOL CIsoSelectDlg::OnInitDialog()
 
 	m_hGLRenderContext = wglCreateContext(*m_viewportCtl.GetDC());
 	wglMakeCurrent(*m_viewportCtl.GetDC(), m_hGLRenderContext);
+	
 
 	glewExperimental = true; // Needed for core profile
 	if (glewInit() != GLEW_OK) {
@@ -141,6 +147,9 @@ BOOL CIsoSelectDlg::OnInitDialog()
 	}
 
 	glClearColor(0.4, 0.7f, 0.9f, 1.0f);
+
+	m_coarseSlider.SetRange(0, 200, TRUE);
+	m_coarseSlider.SetPos(140);
 
 	theApp.InitScene();
 
@@ -236,4 +245,19 @@ void CIsoSelectDlg::OnCancel()
 {
 	// this must be called otherwise clicking the X in the window bar will not work
 	PostQuitMessage(0);
+}
+
+
+void CIsoSelectDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
+{
+	CSliderCtrl *slider = reinterpret_cast<CSliderCtrl*>(pScrollBar);
+	if (slider == &m_coarseSlider)
+	{
+		m_selectedIso = -((((float)m_coarseSlider.GetPos()) / m_coarseSlider.GetRangeMax()) * 2.0f - 1.0f);
+		UpdateData(FALSE);
+		theApp.SetIsoSurface(m_selectedIso);
+		theApp.update = true;
+	}
+
+	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
 }
