@@ -9,7 +9,9 @@
 #define VC_EXTRALEAN            // Exclude rarely-used stuff from Windows headers
 #endif
 
+#ifdef _DEBUG
 #define _AFXDLL
+#endif
 
 //#define NOMINMAX
 //#include <algorithm>
