@@ -27,11 +27,13 @@ public:
 	GLuint vertexArray;
 	glm::mat4 worldMat, viewMat, projMat;
 	std::unique_ptr<GPUProgram> marchingCubes;
+	std::unique_ptr<GPUProgram> marchingCubesTF;
 	std::unique_ptr<Texture2D> triTableTex;
 	std::unique_ptr<Texture3D> volumeTex;
 
 	void InitScene();
 	void SetIsoSurface(float value);
+	void SaveMesh(std::wstring path);
 
 // Overrides
 public:

@@ -65,6 +65,9 @@ public:
 		const GeometryShader& geometryShader);
 	GPUProgram(const VertexShader& vertexShader, const FragmentShader& fragmentShader,
 		const GeometryShader& geometryShader,
+		GLsizei numTFAttribs, const char **tfAttribNames, GLenum tfBufferMode);
+	GPUProgram(const VertexShader& vertexShader, const FragmentShader& fragmentShader,
+		const GeometryShader& geometryShader,
 		const TessControlShader& tessControlShader,
 		const TessEvaluationShader& tessEvaluationShader);
 	GPUProgram(const VertexShader& vertexShader, const FragmentShader& fragmentShader,

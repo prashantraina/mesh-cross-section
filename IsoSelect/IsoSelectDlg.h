@@ -42,4 +42,5 @@ public:
 	CSliderCtrl m_coarseSlider;
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	float m_selectedIso;
+	afx_msg void OnBnClickedSaveObjButton();
 };
