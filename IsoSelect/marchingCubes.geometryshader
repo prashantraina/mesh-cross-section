@@ -12,8 +12,8 @@ uniform isampler2D tritable;
 uniform ivec3 dims;
 uniform float iso;
 const float gap = 0.5;
-//out vec4 position_model;
-//out vec3 normal_model;
+out vec4 position_model;
+out vec3 normal_model;
 out vec3 baryCoords;
 out vec3 normal;
 out vec3 eyeDir;
@@ -36,7 +36,7 @@ vec4 interp(vec3 fore, vec3 aft, float fore_intensity, float aft_intensity, floa
 }
 
 void issue(vec4 position) {
-  vec4 position_model = position;
+  position_model = position;
   vec4 position_world = world * position_model;
   gl_Position = projection * view * position_world;
   eyeDir = normalize(eyePos - position_world.xyz);
@@ -48,7 +48,7 @@ void issue(vec4 position) {
   float next_z = textureOffset(volume, texcoord, ivec3(0, 0, 1)).r;
   vec3 grad = vec3(next_x - here, next_y - here, next_z - here);
 
-  vec3 normal_model = normalize(grad);
+  normal_model = normalize(grad);
   normal = normalize((/*view * */world * vec4(normal_model, 1)).xyz);
   //normal = vec3(normal_model);
   //normal = normalize(normal);

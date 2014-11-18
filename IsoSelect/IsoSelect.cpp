@@ -118,6 +118,13 @@ void CIsoSelectApp::InitScene()
 	FragmentShader fs(L"phong.fragmentshader");
 	GeometryShader gs(L"marchingCubes.geometryshader");
 
+	const char *captured[] = {
+		"position_model",
+		"normal_model"
+	};
+
+	marchingCubesTF.reset(new GPUProgram(vs, fs, gs, 2, captured, GL_INTERLEAVED_ATTRIBS));
+
 	marchingCubes.reset(new GPUProgram(vs, fs, gs));
 
 	marchingCubes->bind();
@@ -178,11 +185,25 @@ void CIsoSelectApp::InitScene()
 	volumeTex->BindToUniform((*marchingCubes)["volume"]);
 
 	glUniform1f((*marchingCubes)["iso"], -0.4f);
+
+	marchingCubesTF->bind();
+	glUniform1f((*marchingCubesTF)["iso"], -0.4f);
+	triTableTex->BindToUniform((*marchingCubesTF)["tritable"]);
+	volumeTex->BindToUniform((*marchingCubesTF)["volume"]);
+	glUniformMatrix4fv((*marchingCubesTF)["world"], 1, GL_FALSE, &worldMat[0][0]);
+	glUniformMatrix4fv((*marchingCubesTF)["view"], 1, GL_FALSE, &viewMat[0][0]);
+	glUniformMatrix4fv((*marchingCubesTF)["projection"], 1, GL_FALSE, &projMat[0][0]);
+	glUniform3i((*marchingCubesTF)["dims"], dim, dim, dim);
+	glUniform3fv((*marchingCubesTF)["eyePos"], 1, &eye.x);
+
 }
 
 void CIsoSelectApp::SetIsoSurface(float value)
 {
+	marchingCubes->bind();
 	glUniform1f((*marchingCubes)["iso"], value);
+	marchingCubesTF->bind();
+	glUniform1f((*marchingCubesTF)["iso"], value);
 }
 
 
@@ -235,4 +256,163 @@ int CIsoSelectApp::ExitInstance()
 	glDeleteBuffers(1, &vertexBuffer);
 
 	return CWinApp::ExitInstance();
+}
+
+void CIsoSelectApp::SaveMesh(std::wstring path)
+{
+	static const GLsizeiptr max_ntriangles = dim * dim * dim * 5;
+	static const GLsizeiptr max_nvertices = max_ntriangles * 3;
+	static const GLsizeiptr max_nbytes = max_nvertices * (4 + 3) * sizeof(float);
+
+	GLuint tfBuf, tfPrimQuery;
+	glGenQueries(1, &tfPrimQuery);
+	glGenBuffers(1, &tfBuf);
+	glBindBuffer(GL_ARRAY_BUFFER, tfBuf);
+	glBufferData(GL_ARRAY_BUFFER, max_nbytes, nullptr, GL_STATIC_DRAW);
+
+	marchingCubesTF->bind();
+
+	glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, tfPrimQuery);
+	
+	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tfBuf);
+	glEnable(GL_RASTERIZER_DISCARD);
+	glBeginTransformFeedback(GL_TRIANGLES); 
+	glEnableVertexAttribArray(0);
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBindVertexArray(vertexArray); 
+	glDrawArraysInstanced(GL_POINTS, 0, 1, dim * dim * dim);
+	glEndTransformFeedback();
+	glDisable(GL_RASTERIZER_DISCARD);
+
+
+	glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+	GLuint nprimitives;
+	glGetQueryObjectuiv(tfPrimQuery, GL_QUERY_RESULT, &nprimitives);
+
+	struct
+	{
+		glm::vec4 position;
+		glm::vec3 normal;
+	}
+	*vertex;
+
+	static const float epsilon = 0.001f;
+
+	struct vertexHash
+	{
+		inline size_t operator()(const glm::vec4& vertex) const
+		{
+			return std::hash<float>()(vertex.x) ^
+				std::hash<float>()(vertex.y) ^ 
+				std::hash<float>()(vertex.z);
+		}
+	};
+
+	struct normalHash
+	{
+		inline size_t operator()(const glm::vec3& normal) const
+		{
+			return std::hash<float>()(normal.x) ^
+				std::hash<float>()(normal.y) ^
+				std::hash<float>()(normal.z);
+		}
+	};
+
+	static struct vertexEquality
+	{
+		inline bool operator()(const glm::vec4& vert1, const glm::vec4& vert2) const
+		{
+			return (fabsf(vert1.x - vert2.x) <= epsilon) &&
+				(fabsf(vert1.y - vert2.y) <= epsilon) &&
+				(fabsf(vert1.z - vert2.z) <= epsilon);
+		}
+	};
+
+	static struct normalEquality
+	{
+		inline bool operator()(const glm::vec3& norm1, const glm::vec3& norm2) const
+		{
+			return (fabsf(norm1.x - norm2.x) <= epsilon) &&
+				(fabsf(norm1.y - norm2.y) <= epsilon) &&
+				(fabsf(norm1.z - norm2.z) <= epsilon);
+		}
+	};
+
+	std::unordered_map<glm::vec4, glm::uint32, vertexHash, vertexEquality> vertexIndexMap;
+	std::unordered_map<glm::vec3, glm::uint32, normalHash, normalEquality> normalIndexMap;
+	std::vector<glm::vec4> vertices;
+	std::vector<glm::vec3> normals;
+	std::vector<glm::uint32> indices;
+	std::vector<glm::uint32> normalIndices;
+
+	vertex = reinterpret_cast<decltype(vertex)>(glMapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, GL_READ_ONLY));
+
+	glm::uint32 lastVertIndex = 0U;
+	glm::uint32 lastNormalIndex = 0U;
+
+	for (ptrdiff_t i = 0; i < nprimitives * 3; i++)
+	{
+		if (vertexIndexMap.find(vertex->position) == vertexIndexMap.end())
+		{
+			vertices.push_back(vertex->position);
+			vertexIndexMap[vertex->position] = ++lastVertIndex;
+			indices.push_back(lastVertIndex);
+		}
+		else
+		{
+			indices.push_back(vertexIndexMap[vertex->position]);
+		}
+
+		if (normalIndexMap.find(vertex->normal) == normalIndexMap.end())
+		{
+			normals.push_back(vertex->normal);
+			normalIndexMap[vertex->normal] = ++lastNormalIndex;
+			normalIndices.push_back(lastNormalIndex);
+		}
+		else
+		{
+			normalIndices.push_back(normalIndexMap[vertex->normal]);
+		}
+
+		vertex++;
+	}
+
+	std::ostringstream strOut;
+
+	for (const auto& vert : vertices)
+	{
+		strOut << "v " << vert.x << " " << vert.y << " " << vert.z << "\n";
+	}
+
+	for (const auto& norm : normals)
+	{
+		strOut << "vn " << norm.x << " " << norm.y << " " << norm.z << "\n";
+	}
+
+	for (size_t face = 0U; face < nprimitives; face++)
+	{
+		const glm::uint32& vert1 = indices[face * 3];
+		const glm::uint32& vert2 = indices[face * 3 + 1];
+		const glm::uint32& vert3 = indices[face * 3 + 2];
+		const glm::uint32& norm1 = normalIndices[face * 3];
+		const glm::uint32& norm2 = normalIndices[face * 3 + 1];
+		const glm::uint32& norm3 = normalIndices[face * 3 + 2];
+
+		strOut << "f " << vert1 << "//" << norm1 << " " << vert2 << "//" << norm2 << " " << vert3 << "//" << norm3 << "\n";
+	}
+
+	std::ofstream fOut(path, std::ios::trunc);
+	if (!fOut.is_open())
+	{
+		AfxMessageBox((L"Unable to open file: " + path).c_str(), MB_OK | MB_ICONEXCLAMATION);
+	}
+	else
+	{
+		fOut << strOut.str();
+		fOut.close();
+	}
+	glUnmapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER);
+
+	glDeleteBuffers(1, &tfBuf);
+	glDeleteQueries(1, &tfPrimQuery);
 }

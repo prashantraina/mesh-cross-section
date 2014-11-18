@@ -51,6 +51,7 @@
 #include <fstream>
 #include <unordered_map>
 #include <memory>
+#include <sstream>
 
 
 #ifdef _UNICODE

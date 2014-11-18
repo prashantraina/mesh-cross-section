@@ -71,6 +71,7 @@ BEGIN_MESSAGE_MAP(CIsoSelectDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
 	ON_WM_VSCROLL()
+	ON_BN_CLICKED(IDC_SAVE_OBJ_BUTTON, &CIsoSelectDlg::OnBnClickedSaveObjButton)
 END_MESSAGE_MAP()
 
 
@@ -260,4 +261,14 @@ void CIsoSelectDlg::OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar)
 	}
 
 	CDialogEx::OnVScroll(nSBCode, nPos, pScrollBar);
+}
+
+
+void CIsoSelectDlg::OnBnClickedSaveObjButton()
+{
+	CFileDialog dialog(FALSE, _T(".obj"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("OBJ Files (*.obj)|*.obj|"), this);
+	if (dialog.DoModal() == IDOK)
+	{
+		theApp.SaveMesh(std::wstring(dialog.GetPathName()));
+	}
 }

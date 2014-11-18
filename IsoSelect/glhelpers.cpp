@@ -147,6 +147,20 @@ GPUProgram::GPUProgram(const VertexShader& vertexShader, const FragmentShader& f
 	checkProgram();
 }
 
+
+GPUProgram::GPUProgram(const VertexShader& vertexShader, const FragmentShader& fragmentShader,
+	const GeometryShader& geometryShader,
+	GLsizei numTFAttribs, const char **tfAttribNames, GLenum tfBufferMode)
+{
+	programID = glCreateProgram();
+	glAttachShader(programID, vertexShader.getId());
+	glAttachShader(programID, fragmentShader.getId());
+	glAttachShader(programID, geometryShader.getId());
+	glTransformFeedbackVaryings(programID, numTFAttribs, tfAttribNames, tfBufferMode);
+	glLinkProgram(programID);
+	checkProgram();
+}
+
 GPUProgram::GPUProgram(const VertexShader& vertexShader, const FragmentShader& fragmentShader,
 	const GeometryShader& geometryShader,
 	const TessControlShader& tessControlShader,
