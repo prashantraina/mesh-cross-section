@@ -72,6 +72,9 @@
     <None Include="solidColor.fragmentshader">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="pointToSquare.geometryshader">
+      <Filter>Shaders</Filter>
+    </None>
     <None Include="marchingCubes.geometryshader">
       <Filter>Shaders</Filter>
     </None>
