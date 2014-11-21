@@ -196,8 +196,9 @@ void CCrossSectionDlg::OnBnClickedFileOpen()
 			aiComponent_TANGENTS_AND_BITANGENTS);
 		importer.SetPropertyBool(AI_CONFIG_PP_PTV_NORMALIZE, true);
 		const aiScene *scene = importer.ReadFile(asciiStr.get(), aiProcess_GenSmoothNormals | aiProcess_Triangulate | 
-			aiProcess_JoinIdenticalVertices | aiProcess_PreTransformVertices | aiProcess_RemoveComponent | 
-			aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
+			aiProcess_JoinIdenticalVertices | aiProcess_PreTransformVertices | aiProcess_RemoveComponent /*|
+			aiProcess_FixInfacingNormals| 
+			aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph*/);
 
 		if (!scene || !scene->HasMeshes())
 		{
@@ -205,6 +206,6 @@ void CCrossSectionDlg::OnBnClickedFileOpen()
 			return;
 		}
 
-		theApp.LoadMesh(scene->mMeshes[0]);
+		theApp.LoadMesh(scene->mMeshes, scene->mNumMeshes);
 	}
 }

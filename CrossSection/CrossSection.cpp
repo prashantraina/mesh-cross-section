@@ -70,6 +70,8 @@ BOOL CCrossSectionApp::InitInstance()
 
 void CCrossSectionApp::InitScene()
 {
+	glEnable(GL_DEPTH_TEST);
+
 	worldMat = glm::mat4(1);
 
 	eyePos = glm::vec3(3);
@@ -133,7 +135,7 @@ int CCrossSectionApp::ExitInstance()
 	return CWinApp::ExitInstance();
 }
 
-void CCrossSectionApp::LoadMesh(const aiMesh *mesh)
+void CCrossSectionApp::LoadMesh(const aiMesh * const *meshes, size_t numMeshes)
 {
 	glDeleteVertexArrays(1, &vertexArray);
 	glDeleteBuffers(1, &vertexBuffer);
@@ -149,29 +151,46 @@ void CCrossSectionApp::LoadMesh(const aiMesh *mesh)
 		aiVector3D normal;
 	};
 
-	numIndices = mesh->mNumFaces * 3UL;
+	size_t numVertices = 0;
 
-	std::unique_ptr<vertex[]> vertices(new vertex[mesh->mNumVertices]);
-	std::unique_ptr<glm::uint32[]> indices(new glm::uint32[numIndices]);
+	numIndices = 0;
 
-	for (ptrdiff_t i = 0; i < mesh->mNumVertices; i++)
+	for (ptrdiff_t i = 0; i < numMeshes; i++)
 	{
-		vertices[i].position = mesh->mVertices[i];
-		vertices[i].normal = mesh->mNormals[i];
-		vertices[i].normal.Normalize();
+		numVertices += meshes[i]->mNumVertices;
+		numIndices += meshes[i]->mNumFaces * 3UL;
 	}
 
-	for (ptrdiff_t i = 0; i < mesh->mNumFaces; i++)
+	std::unique_ptr<vertex[]> vertices(new vertex[numVertices]);
+	std::unique_ptr<glm::uint32[]> indices(new glm::uint32[numIndices]);
+
+	ptrdiff_t vertI = 0, indexI = 0, lastMeshNumVerts = 0;
+
+	for (ptrdiff_t meshI = 0; meshI < numMeshes; meshI++)
 	{
-		indices[(3 * i) + 0] = mesh->mFaces[i].mIndices[0];
-		indices[(3 * i) + 1] = mesh->mFaces[i].mIndices[1];
-		indices[(3 * i) + 2] = mesh->mFaces[i].mIndices[2];
+		const aiMesh * const & mesh = meshes[meshI];
+
+		for (ptrdiff_t i = 0; i < mesh->mNumVertices; i++)
+		{
+			vertices[vertI].position = mesh->mVertices[i];
+			vertices[vertI].normal = -mesh->mNormals[i];
+			vertices[vertI].normal.Normalize();
+			vertI++;
+		}
+
+		for (ptrdiff_t i = 0; i < mesh->mNumFaces; i++)
+		{
+			indices[indexI++] = lastMeshNumVerts + mesh->mFaces[i].mIndices[0];
+			indices[indexI++] = lastMeshNumVerts + mesh->mFaces[i].mIndices[1];
+			indices[indexI++] = lastMeshNumVerts + mesh->mFaces[i].mIndices[2];
+		}
+		lastMeshNumVerts += mesh->mNumVertices;
 	}
 
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
 	glBindVertexArray(vertexArray);
 
-	glBufferData(GL_ARRAY_BUFFER, mesh->mNumVertices * sizeof(vertex), vertices.get(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, numVertices * sizeof(vertex), vertices.get(), GL_STATIC_DRAW);
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), nullptr);//position
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), reinterpret_cast<char*>(offsetof(vertex, normal)));//normal

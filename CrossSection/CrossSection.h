@@ -32,7 +32,7 @@ public:
 	std::unique_ptr<GPUProgram> phongShading;
 
 	void InitScene();
-	void LoadMesh(const aiMesh *mesh);
+	void LoadMesh(const aiMesh * const *meshes, size_t numMeshes);
 
 // Overrides
 public:
