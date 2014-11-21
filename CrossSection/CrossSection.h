@@ -25,9 +25,14 @@ public:
 	CCrossSectionDlg *m_pTheDialog;
 	GLuint vertexBuffer;
 	GLuint vertexArray;
+	GLuint indexBuffer;
+	size_t numIndices;
 	glm::mat4 worldMat, viewMat, projMat;
+	glm::vec3 eyePos;
+	std::unique_ptr<GPUProgram> phongShading;
 
 	void InitScene();
+	void LoadMesh(const aiMesh *mesh);
 
 // Overrides
 public:

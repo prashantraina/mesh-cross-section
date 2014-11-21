@@ -70,6 +70,26 @@ BOOL CCrossSectionApp::InitInstance()
 
 void CCrossSectionApp::InitScene()
 {
+	worldMat = glm::mat4(1);
+
+	eyePos = glm::vec3(3);
+
+	viewMat = glm::lookAt(eyePos, glm::vec3(0), glm::vec3(0, 1, 0));
+
+	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.01f, 10.0f);
+
+	glm::mat4 viewProj = projMat * viewMat;
+
+	VertexShader phongVS(L"phong.vertexshader");
+	FragmentShader phongFS(L"phong.fragmentshader");
+
+	phongShading.reset(new GPUProgram(phongVS, phongFS));
+
+	phongShading->bind();
+
+	glUniformMatrix4fv((*phongShading)["world"], 1, GL_FALSE, &worldMat[0][0]);
+	glUniformMatrix4fv((*phongShading)["viewProj"], 1, GL_FALSE, &viewProj[0][0]);
+	glUniform3fv((*phongShading)["eyePos"], 1, &eyePos.x);
 }
 
 BOOL CCrossSectionApp::OnIdle(LONG lCount)
@@ -80,6 +100,19 @@ BOOL CCrossSectionApp::OnIdle(LONG lCount)
 	if (update)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		if (vertexArray != 0)
+		{
+			phongShading->bind();
+
+			glBindVertexArray(vertexArray);
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+			glEnableVertexAttribArray(0);
+			glEnableVertexAttribArray(1);
+
+			glDrawElements(GL_TRIANGLES, numIndices, GL_UNSIGNED_INT, nullptr);
+		}
+
 		::SwapBuffers(*m_pTheDialog->m_viewportCtl.GetDC()); 
 		update = false;
 		return TRUE;
@@ -95,6 +128,57 @@ int CCrossSectionApp::ExitInstance()
 
 	glDeleteVertexArrays(1, &vertexArray);
 	glDeleteBuffers(1, &vertexBuffer);
+	glDeleteBuffers(1, &indexBuffer);
 
 	return CWinApp::ExitInstance();
+}
+
+void CCrossSectionApp::LoadMesh(const aiMesh *mesh)
+{
+	glDeleteVertexArrays(1, &vertexArray);
+	glDeleteBuffers(1, &vertexBuffer);
+	glDeleteBuffers(1, &indexBuffer);
+
+	glGenBuffers(1, &vertexBuffer);
+	glGenBuffers(1, &indexBuffer);
+	glGenVertexArrays(1, &vertexArray);
+
+	struct vertex
+	{
+		aiVector3D position;
+		aiVector3D normal;
+	};
+
+	numIndices = mesh->mNumFaces * 3UL;
+
+	std::unique_ptr<vertex[]> vertices(new vertex[mesh->mNumVertices]);
+	std::unique_ptr<glm::uint32[]> indices(new glm::uint32[numIndices]);
+
+	for (ptrdiff_t i = 0; i < mesh->mNumVertices; i++)
+	{
+		vertices[i].position = mesh->mVertices[i];
+		vertices[i].normal = mesh->mNormals[i];
+		vertices[i].normal.Normalize();
+	}
+
+	for (ptrdiff_t i = 0; i < mesh->mNumFaces; i++)
+	{
+		indices[(3 * i) + 0] = mesh->mFaces[i].mIndices[0];
+		indices[(3 * i) + 1] = mesh->mFaces[i].mIndices[1];
+		indices[(3 * i) + 2] = mesh->mFaces[i].mIndices[2];
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer);
+	glBindVertexArray(vertexArray);
+
+	glBufferData(GL_ARRAY_BUFFER, mesh->mNumVertices * sizeof(vertex), vertices.get(), GL_STATIC_DRAW);
+
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), nullptr);//position
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(vertex), reinterpret_cast<char*>(offsetof(vertex, normal)));//normal
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);
+
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, numIndices * sizeof(glm::uint32), indices.get(), GL_STATIC_DRAW);
+
+	update = true;
 }

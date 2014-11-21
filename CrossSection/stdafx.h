@@ -58,7 +58,9 @@ namespace Gdiplus
 #include <sstream>
 
 #include <Importer.hpp>
-
+#include <scene.h>
+#include <postprocess.h>
+#include <config.h>
 
 
 #ifdef _UNICODE

@@ -243,6 +243,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</ExcludedFromBuild>
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</DeploymentContent>
     </None>
+    <None Include="phong.vertexshader" />
     <None Include="res\CrossSection.rc2" />
   </ItemGroup>
   <ItemGroup>

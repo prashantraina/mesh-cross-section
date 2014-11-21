@@ -34,6 +34,7 @@ BEGIN_MESSAGE_MAP(CCrossSectionDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
+	ON_BN_CLICKED(ID_FILE_OPEN, &CCrossSectionDlg::OnBnClickedFileOpen)
 END_MESSAGE_MAP()
 
 
@@ -172,4 +173,38 @@ void CCrossSectionDlg::OnCancel()
 {
 	// this must be called otherwise clicking the X in the window bar will not work
 	PostQuitMessage(0);
+}
+
+
+void CCrossSectionDlg::OnBnClickedFileOpen()
+{
+	CFileDialog dialog(TRUE, _T(""), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("All Files (*.*)|*.*|"), this);
+	if (dialog.DoModal() == IDOK)
+	{
+		const CString& pathW = dialog.GetPathName();
+		
+		int asciiLength;
+		BOOL wasDefaultCharUsed;
+		asciiLength = WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, pathW, -1, nullptr, 0, "?", &wasDefaultCharUsed);
+
+		std::unique_ptr<char[]> asciiStr(new char[asciiLength]);
+		WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, pathW, -1, asciiStr.get(), asciiLength, "?", &wasDefaultCharUsed);
+
+	
+		Assimp::Importer importer;
+		importer.SetPropertyInteger(AI_CONFIG_PP_RVC_FLAGS, aiComponent_COLORS | aiComponent_BONEWEIGHTS | aiComponent_TEXCOORDS |
+			aiComponent_TANGENTS_AND_BITANGENTS);
+		importer.SetPropertyBool(AI_CONFIG_PP_PTV_NORMALIZE, true);
+		const aiScene *scene = importer.ReadFile(asciiStr.get(), aiProcess_GenSmoothNormals | aiProcess_Triangulate | 
+			aiProcess_JoinIdenticalVertices | aiProcess_PreTransformVertices | aiProcess_RemoveComponent | 
+			aiProcess_OptimizeMeshes | aiProcess_OptimizeGraph);
+
+		if (!scene || !scene->HasMeshes())
+		{
+			AfxMessageBox((L"Failed to load: " + pathW), MB_OK | MB_ICONERROR);
+			return;
+		}
+
+		theApp.LoadMesh(scene->mMeshes[0]);
+	}
 }
