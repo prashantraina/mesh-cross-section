@@ -9,6 +9,8 @@
 #endif
 
 #include "resource.h"		// main symbols
+#include "CrossSectionDlg.h"
+#include "../IsoSelect/glhelpers.h"
 
 
 // CCrossSectionApp:
@@ -19,6 +21,13 @@ class CCrossSectionApp : public CWinApp
 {
 public:
 	CCrossSectionApp();
+	bool update;
+	CCrossSectionDlg *m_pTheDialog;
+	GLuint vertexBuffer;
+	GLuint vertexArray;
+	glm::mat4 worldMat, viewMat, projMat;
+
+	void InitScene();
 
 // Overrides
 public:
@@ -27,6 +36,8 @@ public:
 // Implementation
 
 	DECLARE_MESSAGE_MAP()
+	virtual BOOL OnIdle(LONG lCount);
+	virtual int ExitInstance();
 };
 
 extern CCrossSectionApp theApp;

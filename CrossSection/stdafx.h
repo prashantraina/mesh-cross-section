@@ -9,6 +9,18 @@
 #define VC_EXTRALEAN            // Exclude rarely-used stuff from Windows headers
 #endif
 
+
+//#define NOMINMAX
+//#include <algorithm>
+
+/*#define NOMINMAX
+#include <algorithm>
+namespace Gdiplus
+{
+	using std::min;
+	using std::max;
+};*/
+
 #include "targetver.h"
 
 #define _ATL_CSTRING_EXPLICIT_CONSTRUCTORS      // some CString constructors will be explicit
@@ -18,8 +30,6 @@
 
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
-
-
 
 
 
@@ -35,7 +45,17 @@
 
 
 
-
+#define GLEW_STATIC
+#include <GL/glew.h>
+#include <GL/glcorearb.h>
+#include <GLM/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <unordered_map>
+#include <memory>
+#include <sstream>
 
 
 
