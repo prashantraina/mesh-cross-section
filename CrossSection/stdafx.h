@@ -57,6 +57,7 @@ namespace Gdiplus
 #include <memory>
 #include <sstream>
 
+#include <Importer.hpp>
 
 
 
