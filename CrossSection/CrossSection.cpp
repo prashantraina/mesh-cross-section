@@ -20,7 +20,7 @@ END_MESSAGE_MAP()
 
 // CCrossSectionApp construction
 
-CCrossSectionApp::CCrossSectionApp() : update(true)
+CCrossSectionApp::CCrossSectionApp() : update(true), vertexArray(0), vertexBuffer(0), indexBuffer(0)
 {
 }
 
@@ -78,12 +78,36 @@ void CCrossSectionApp::InitScene()
 
 	viewMat = glm::lookAt(eyePos, glm::vec3(0), glm::vec3(0, 1, 0));
 
-	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.01f, 10.0f);
+	projMat = glm::perspective(45.0f, 4.0f / 3.0f, 0.01f, 20.0f);
 
 	glm::mat4 viewProj = projMat * viewMat;
 
 	VertexShader phongVS(L"phong.vertexshader");
+	VertexShader crossSecVS(L"cross_sec.vertexshader");
+	GeometryShader crossSecGS(L"cross_sec.geometryshader");
 	FragmentShader phongFS(L"phong.fragmentshader");
+	FragmentShader solidFS(L"solidcolor.fragmentshader");
+
+	crossSectionShader.reset(new GPUProgram(crossSecVS, solidFS, crossSecGS));
+
+	planeNormals.reset(new glm::vec3[numPlanes]);
+	planePoints.reset(new glm::vec3[numPlanes]);
+
+	planeNormals[0] = glm::vec3(0, 0, 1);
+	planePoints[0] = glm::vec3(0, 0, 0);
+	planeNormals[1] = glm::vec3(0, 1, 0);
+	planePoints[1] = glm::vec3(0, 0, 0);
+	planeNormals[2] = glm::vec3(1, 0, 0);
+	planePoints[2] = glm::vec3(0, 0, 0);
+
+	crossSectionShader->bind();
+
+	glUniformMatrix4fv((*crossSectionShader)["world"], 1, GL_FALSE, &worldMat[0][0]);
+	glUniformMatrix4fv((*crossSectionShader)["viewProj"], 1, GL_FALSE, &viewProj[0][0]);
+	//glUniform3fv((*phongShading)["eyePos"], 1, &eyePos.x);
+	glUniform3fv((*crossSectionShader)["planeNormals"], numPlanes, &planeNormals[0].x);
+	glUniform3fv((*crossSectionShader)["planePoints"], numPlanes, &planePoints[0].x);
+	glUniform1ui((*crossSectionShader)["numPlanes"], numPlanes);
 
 	phongShading.reset(new GPUProgram(phongVS, phongFS));
 
@@ -105,7 +129,8 @@ BOOL CCrossSectionApp::OnIdle(LONG lCount)
 
 		if (vertexArray != 0)
 		{
-			phongShading->bind();
+			//phongShading->bind();
+			crossSectionShader->bind();
 
 			glBindVertexArray(vertexArray);
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer);

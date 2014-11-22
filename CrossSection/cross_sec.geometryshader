@@ -1,0 +1,108 @@
+#version 430
+
+#define MAX_PLANES 15
+
+layout(triangles) in;
+layout(line_strip, max_vertices = 30) out; //2 * MAX_PLANES
+
+uniform mat4 world;
+uniform mat4 viewProj;
+//uniform vec3 eyePos;
+uniform uint numPlanes;
+uniform vec3 planeNormals[MAX_PLANES];
+uniform vec3 planePoints[MAX_PLANES];
+
+flat out vec3 color;
+flat out uint planeNumber;
+flat out vec3 modelPos;
+
+#define NUM_PLANE_COLORS 3 
+
+const vec3 planeColors[NUM_PLANE_COLORS] = {
+	vec3(1,0,0),
+	vec3(0,1,0),
+	vec3(0,0,1)
+};
+
+struct Plane
+{
+	vec3 normal;
+	vec3 point;
+};
+
+float distPointToPlane(vec3 point, Plane plane)
+{
+	return dot(plane.normal, point - plane.point);
+}
+
+bool planeIntersectsTriangle(vec3 triangle[3], Plane plane, out vec3 intsec1, out vec3 intsec2)
+{
+	float d1 = distPointToPlane(triangle[0], plane);
+	float d2 = distPointToPlane(triangle[1], plane);
+	float d3 = distPointToPlane(triangle[2], plane);
+
+	bool found1, found2;
+	found1 = found2 = false;
+
+	if(d1 * d2 < 0)
+	{
+		intsec1 = mix(triangle[0], triangle[1], d1 / (d1 - d2));
+		found1 = true;
+	}
+
+	if(d2 * d3 < 0)
+	{
+		vec3 intsec = mix(triangle[1], triangle[2], d2 / (d2 - d3));
+		if(found1)
+		{
+			intsec2 = intsec;
+			found2 = true;
+		}
+		else
+		{
+			intsec1 = intsec;
+			found1 = true;
+		}
+	}
+
+	if(found1 && !found2 && d3 * d1 < 0)
+	{
+		intsec2 = mix(triangle[2], triangle[0], d3 / (d3 - d1));
+		found2 = true;
+	}
+
+	return found2;
+}
+
+void emit(vec3 point)
+{
+	modelPos = point;
+	gl_Position = viewProj * world * vec4(modelPos, 1);
+	EmitVertex();
+}
+
+void main()
+{
+	for(uint i = 0; i < min(numPlanes, MAX_PLANES); i++)
+	{
+		color = planeColors[i % planeColors.length()];
+		planeNumber = i;
+
+		vec3 triangle[3] = {gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz, gl_in[2].gl_Position.xyz};
+
+		Plane plane;
+		plane.normal = normalize(planeNormals[i]);
+		plane.point = planePoints[i];
+
+		vec3 intsec1, intsec2;
+
+		bool intersects = planeIntersectsTriangle(triangle, plane, intsec1, intsec2);
+
+		if(intersects)
+		{
+			emit(intsec1);
+			emit(intsec2);
+			EndPrimitive();
+		}
+	}
+}

@@ -69,6 +69,15 @@
     <None Include="phong.vertexshader">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="cross_sec.geometryshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="cross_sec.vertexshader">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="solidcolor.fragmentshader">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\CrossSection.ico">
