@@ -99,6 +99,14 @@ void CCrossSectionApp::InitScene()
 	planePoints[1] = glm::vec3(0, 0, 0);
 	planeNormals[2] = glm::vec3(1, 0, 0);
 	planePoints[2] = glm::vec3(0, 0, 0);
+	planeNormals[3] = glm::vec3(1, 0, 0);
+	planePoints[3] = glm::vec3(0.5f, 0, 0);
+	planeNormals[4] = glm::vec3(1, 0, 0);
+	planePoints[4] = glm::vec3(-0.5, 0, 0);
+	planeNormals[5] = glm::vec3(0, 1, 0);
+	planePoints[5] = glm::vec3(0, 0.5, 0);
+	planeNormals[6] = glm::vec3(0, 1, 0);
+	planePoints[6] = glm::vec3(0, -0.5, 0);
 
 	crossSectionShader->bind();
 

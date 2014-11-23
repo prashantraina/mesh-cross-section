@@ -31,7 +31,7 @@ public:
 	glm::vec3 eyePos;
 	std::unique_ptr<GPUProgram> phongShading;
 	std::unique_ptr<GPUProgram> crossSectionShader;
-	static const glm::uint32 numPlanes = 3;
+	static const glm::uint32 numPlanes = 7;
 	std::unique_ptr<glm::vec3[]> planeNormals;
 	std::unique_ptr<glm::vec3[]> planePoints;
 
