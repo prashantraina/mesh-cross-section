@@ -27,11 +27,12 @@ public:
 	GLuint vertexArray;
 	GLuint indexBuffer;
 	size_t numIndices;
+	glm::uint32 numPlanes;
 	glm::mat4 worldMat, viewMat, projMat;
 	glm::vec3 eyePos;
 	std::unique_ptr<GPUProgram> phongShading;
 	std::unique_ptr<GPUProgram> crossSectionShader;
-	static const glm::uint32 numPlanes = 7;
+	static const glm::uint32 maxPlanes = 15;
 	std::unique_ptr<glm::vec3[]> planeNormals;
 	std::unique_ptr<glm::vec3[]> planePoints;
 

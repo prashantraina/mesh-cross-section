@@ -22,6 +22,7 @@ END_MESSAGE_MAP()
 
 CCrossSectionApp::CCrossSectionApp() : update(true), vertexArray(0), vertexBuffer(0), indexBuffer(0)
 {
+	numPlanes = 7;
 }
 
 
@@ -90,8 +91,8 @@ void CCrossSectionApp::InitScene()
 
 	crossSectionShader.reset(new GPUProgram(crossSecVS, solidFS, crossSecGS));
 
-	planeNormals.reset(new glm::vec3[numPlanes]);
-	planePoints.reset(new glm::vec3[numPlanes]);
+	planeNormals.reset(new glm::vec3[maxPlanes]);
+	planePoints.reset(new glm::vec3[maxPlanes]);
 
 	planeNormals[0] = glm::vec3(0, 0, 1);
 	planePoints[0] = glm::vec3(0, 0, 0);
