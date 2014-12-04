@@ -211,6 +211,72 @@ void HighlightBorder(Concurrency::array_view<value_type, rank>& image, value_typ
 	image.synchronize();
 }
 
+//http://en.wikipedia.org/wiki/Bresenham's_line_algorithm
+//http://cobrabytes.squeakyduck.co.uk/forum/index.php?topic=1150.0
+template<typename image_type, typename pixel_type>
+void DrawLine3D(image_type& imgF, 
+	int startX, int startY, int startZ,
+	int endX, int endY, int endZ,
+	pixel_type color)
+{
+	bool swapXY = abs(endY - startY) > abs(endX - startX);
+	
+	if (swapXY)
+	{
+		std::swap(startX, startY);
+		std::swap(endX, endY);
+	}
+
+	bool swapXZ = abs(endZ - startZ) > abs(endX - startX);
+
+	if (swapXZ)
+	{
+		std::swap(startX, startZ);
+		std::swap(endX, endZ);
+	}
+
+	int deltaX = abs(endX - startX);
+	int deltaY = abs(endY - startY);
+	int deltaZ = abs(endZ - startZ);
+
+	int driftXY = deltaX / 2;
+	int driftXZ = deltaX / 2;
+
+	int stepX = (endX >= startX) ? 1 : -1;
+	int stepY = (endY >= startY) ? 1 : -1;
+	int stepZ = (endZ >= startZ) ? 1 : -1;
+
+	int y = startY;
+	int z = startZ;
+
+	for (int x = startX; x <= endX; x += stepX)
+	{
+		int cx = x, cy = y, cz = z;
+
+		if (swapXZ)
+			std::swap(cx, cz);
+		if (swapXY)
+			std::swap(cx, cy);
+
+		imgF[cx][cy][cz] = color;
+
+		driftXY -= deltaY;
+		driftXZ -= deltaZ;
+
+		if (driftXY < 0)
+		{
+			y += stepY;
+			driftXY += deltaX;
+		}
+
+		if (driftXZ < 0)
+		{
+			z += stepZ;
+			driftXZ += deltaX;
+		}
+	}
+}
+
 template<int rank, typename value_type>
 void thresholdImage(Concurrency::array_view<value_type, rank>& image,
 	value_type threshold,

@@ -19,24 +19,95 @@ void generateInitalGrid(const wchar_t *path,
 	constant = reinterpret_cast<boolMat*>(new boolType[dim * dim * dim]);
 	::memset(constant, 0, sizeof(boolMat)); 
 	
-	DrawCircleXY(*imgF, 127, 127, 128, 63, surfaceColor);
-	DrawCircleXY(*imgF, 127, 127, 80, 40, surfaceColor);
-	DrawCircleXY(*imgF, 127, 127, 168, 40, surfaceColor);
-	DrawCircleXZ(*imgF, 127, 127, 128, 58, surfaceColor);
+	FILE *file;
+	_wfopen_s(&file, path, L"r");
+	if (file == NULL){
+		printf("Unable to open %ls", path);
+		getchar();
+		throw;
+	}
 
-	(*imgF)[127][127][128] = interiorColor;
-	(*imgF)[127][127][80] = interiorColor;
-	(*imgF)[127][127][168] = interiorColor;
+	struct coord
+	{
+		int x;
+		int y;
+		int z;
+	};
 
-	DrawCircleXY(*constant, 127, 127, 128, 63, 1U);
-	DrawCircleXY(*constant, 127, 127, 80, 40, 1U);
-	DrawCircleXY(*constant, 127, 127, 168, 40, 1U);
-	DrawCircleXZ(*constant, 127, 127, 128, 58, 1U);
+	struct coordf
+	{
+		float x;
+		float y;
+		float z;
+	};
 
-	(*constant)[127][127][128] = 1U;
-	(*constant)[127][127][80] = 1U;
-	(*constant)[127][127][168] = 1U;
+	struct line
+	{
+		coord start;
+		coord end;
+	};
+
+	std::vector<coord> vertices;
+	std::vector<line> lines;
+	std::vector<coord> points;
+
+	char lineHeader[128];
+
+	while (fscanf_s(file, "%s", lineHeader, sizeof(lineHeader)) != EOF)
+	{
+		if (strcmp(lineHeader, "v") == 0)
+		{
+			coordf vertexf;
+			fscanf_s(file, "%f %f %f\r\n", &vertexf.x, &vertexf.y, &vertexf.z);
+			vertexf.x = (vertexf.x + 1.0f) * ((dim - 1) / 2.0f);
+			vertexf.y = (vertexf.y + 1.0f) * ((dim - 1) / 2.0f);
+			vertexf.z = (vertexf.z + 1.0f) * ((dim - 1) / 2.0f);
+			coord vertex = { (int)vertexf.x, (int)vertexf.y, (int)vertexf.z };
+			vertices.push_back(vertex);
+		}
+		else if (strcmp(lineHeader, "l") == 0)
+		{
+			int start, end;
+			fscanf_s(file, "%d %d\r\n", &start, &end);
+			line seg;
+			seg.start = vertices[start - 1];
+			seg.end = vertices[end - 1];
+			lines.push_back(seg);
+		}
+		else if (strcmp(lineHeader, "p") == 0)
+		{
+			int index;
+			fscanf_s(file, "%d\r\n", &index);
+			coord point = vertices[index - 1];
+			points.push_back(point);
+		}
+		else
+		{
+			// Probably a comment, eat up the rest of the line
+			char stupidBuffer[1000];
+			fgets(stupidBuffer, 1000, file);
+		}
+	}
+
+	for (const line& seg : lines)
+	{
+		DrawLine3D(*imgF, seg.start.x, seg.start.y, seg.start.z, seg.end.x, seg.end.y, seg.end.z, surfaceColor);
+		DrawLine3D(*constant, seg.start.x, seg.start.y, seg.start.z, seg.end.x, seg.end.y, seg.end.z, 1U);
+	}
+
+	for (const coord& point : points)
+	{
+		(*imgF)[point.x][point.y][point.z] = interiorColor;
+		(*constant)[point.x][point.y][point.z] = 1U;
+	}
+
+	//DrawLine3D(*imgF, 117, 117, 127, 117, 137, 147, surfaceColor);
 }
+
+extern "C" {
+	_declspec(dllexport) unsigned long NvOptimusEnablement = 0x00000001;
+}
+
 
 int wmain(int argc, wchar_t *argv[])
 {
@@ -45,7 +116,7 @@ int wmain(int argc, wchar_t *argv[])
 
 	imageType *imgF;
 	boolMat *constant;
-	generateInitalGrid(argc > 1 ? argv[1] : nullptr, imgF, constant);
+	generateInitalGrid(argc > 1 ? argv[1] : L"D:\\Desktop\\test.obj", imgF, constant);
 
 	Concurrency::array_view<pixelType, 3> imageView(dim, dim, dim, reinterpret_cast<pixelType*>(imgF));
 	Concurrency::array_view<boolType, 3> constantView(dim, dim, dim, reinterpret_cast<boolType*>(constant));
@@ -58,12 +129,12 @@ int wmain(int argc, wchar_t *argv[])
 	LARGE_INTEGER startTime, endTime;
 	::QueryPerformanceCounter(&startTime);
 
-	const unsigned int numIterations = 0U;
+	const unsigned int numIterations = 5000U;
 
 	for (unsigned int iter = 0; iter < numIterations; iter++)
 	{
 		filterImage(imageView, filterView, constantView, -1.0f, 1.0f);
-		if (iter % 30 == 0)
+		if (iter % 20 == 0)
 			imageView.synchronize();
 		std::cout << "Iteration: " << iter << "\n";
 	}
