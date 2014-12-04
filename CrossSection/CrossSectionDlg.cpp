@@ -27,6 +27,7 @@ void CCrossSectionDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_VIEWPORT, m_viewportCtl);
+	DDX_Control(pDX, ID_FILE_SAVE_AS, m_saveButton);
 }
 
 BEGIN_MESSAGE_MAP(CCrossSectionDlg, CDialogEx)
@@ -35,6 +36,7 @@ BEGIN_MESSAGE_MAP(CCrossSectionDlg, CDialogEx)
 	ON_WM_DESTROY()
 	ON_WM_SIZE()
 	ON_BN_CLICKED(ID_FILE_OPEN, &CCrossSectionDlg::OnBnClickedFileOpen)
+	ON_BN_CLICKED(ID_FILE_SAVE_AS, &CCrossSectionDlg::OnBnClickedFileSaveAs)
 END_MESSAGE_MAP()
 
 
@@ -207,5 +209,17 @@ void CCrossSectionDlg::OnBnClickedFileOpen()
 		}
 
 		theApp.LoadMesh(scene->mMeshes, scene->mNumMeshes);
+
+		m_saveButton.EnableWindow(TRUE);
+	}
+}
+
+
+void CCrossSectionDlg::OnBnClickedFileSaveAs()
+{
+	CFileDialog dialog(FALSE, _T(".obj"), NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("OBJ Files (*.obj)|*.obj|"), this);
+	if (dialog.DoModal() == IDOK)
+	{
+		theApp.SaveCrossSections(std::wstring(dialog.GetPathName()));
 	}
 }

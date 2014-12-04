@@ -37,4 +37,6 @@ public:
 	virtual void OnOK();
 	virtual void OnCancel();
 	afx_msg void OnBnClickedFileOpen();
+	afx_msg void OnBnClickedFileSaveAs();
+	CButton m_saveButton;
 };

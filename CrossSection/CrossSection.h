@@ -38,6 +38,7 @@ public:
 
 	void InitScene();
 	void LoadMesh(const aiMesh * const *meshes, size_t numMeshes);
+	void SaveCrossSections(std::wstring path);
 
 // Overrides
 public:
