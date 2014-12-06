@@ -91,8 +91,24 @@ void generateInitalGrid(const wchar_t *path,
 
 	for (const line& seg : lines)
 	{
-		DrawLine3D(*imgF, seg.start.x, seg.start.y, seg.start.z, seg.end.x, seg.end.y, seg.end.z, surfaceColor);
-		DrawLine3D(*constant, seg.start.x, seg.start.y, seg.start.z, seg.end.x, seg.end.y, seg.end.z, 1U);
+		if (seg.start.x == seg.end.x &&
+			seg.start.y == seg.end.y &&
+			seg.start.z == seg.end.z)
+		{
+			(*imgF)[seg.start.x][seg.start.y][seg.start.z] = interiorColor;
+			(*constant)[seg.start.x][seg.start.y][seg.start.z] = 1U;
+		}
+		else
+		{
+			DrawLine3D(*imgF, seg.start.x, seg.start.y, seg.start.z, seg.end.x, seg.end.y, seg.end.z, surfaceColor);
+			DrawLine3D(*constant, seg.start.x, seg.start.y, seg.start.z, seg.end.x, seg.end.y, seg.end.z, 1U);
+			DrawLine3D(*imgF, seg.end.x, seg.end.y, seg.end.z, seg.start.x, seg.start.y, seg.start.z, surfaceColor);
+			DrawLine3D(*constant, seg.end.x, seg.end.y, seg.end.z, seg.start.x, seg.start.y, seg.start.z, 1U);
+			(*imgF)[seg.start.x][seg.start.y][seg.start.z] = surfaceColor;
+			(*constant)[seg.start.x][seg.start.y][seg.start.z] = 1U;
+			(*imgF)[seg.end.x][seg.end.y][seg.end.z] = surfaceColor;
+			(*constant)[seg.end.x][seg.end.y][seg.end.z] = 1U;
+		}
 	}
 
 	for (const coord& point : points)
