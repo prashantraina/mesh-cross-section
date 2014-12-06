@@ -153,7 +153,7 @@ void CIsoSelectApp::InitScene()
 	triTableTex.reset(new Texture2D(GL_TEXTURE1, GL_NEAREST, GL_NEAREST, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE,
 		16, 256, GL_R32I, GL_RED_INTEGER, GL_INT, tri_table));
 
-	std::ifstream inDump(L"../600k.dmp", std::ios::binary);
+	std::ifstream inDump(L"../prethresh.dmp", std::ios::binary);
 	if (inDump.is_open())
 	{
 		inDump.seekg(0, std::ios::end);

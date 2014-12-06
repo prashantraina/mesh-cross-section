@@ -156,7 +156,7 @@ int wmain(int argc, wchar_t *argv[])
 	}
 	imageView.synchronize();
 
-	const std::wstring dumpPath = L"D:\\Desktop\\prethresh.dmp";
+	const std::wstring dumpPath = L"../prethresh.dmp";
 
 	std::ofstream dump(dumpPath, std::ios_base::binary | std::ios_base::trunc);
 	if (!dump.is_open())
@@ -184,7 +184,7 @@ int wmain(int argc, wchar_t *argv[])
 	delete[] reinterpret_cast<boolType*>(constant);
 	delete[] reinterpret_cast<pixelType*>(imgF);
 
-	SaveVoxelFile(circleFile, L"D:\\Desktop\\test.binvox");
+	SaveVoxelFile(circleFile, L"../test.binvox");
 
 
 	return 0;
