@@ -433,8 +433,8 @@ void CCrossSectionApp::SaveCrossSections(std::wstring path)
 		{
 			const auto& point1 = points[j];
 			const auto& point2 = points[j + 1];
-			sum += vertices[point1];
-			sum += vertices[point2];
+			sum += vertices[point1 - 1];
+			sum += vertices[point2 - 1];
 
 			strOut << "l " << point1 << " " << point2 << "\n";
 		}
