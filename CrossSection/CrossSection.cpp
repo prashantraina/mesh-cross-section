@@ -22,7 +22,6 @@ END_MESSAGE_MAP()
 
 CCrossSectionApp::CCrossSectionApp() : update(true), vertexArray(0), vertexBuffer(0), indexBuffer(0)
 {
-	numPlanes = 7;
 }
 
 
@@ -100,7 +99,7 @@ void CCrossSectionApp::InitScene()
 	planePoints.reset(new glm::vec3[maxPlanes]);
 
 	planeNormals[0] = glm::vec3(0, 0, 1);
-	planePoints[0] = glm::vec3(0, 0, 0);
+	planePoints[0] = glm::vec3(0, 0, .1);
 	planeNormals[1] = glm::vec3(0, 1, 0);
 	planePoints[1] = glm::vec3(0, 0, 0);
 	planeNormals[2] = glm::vec3(1, 0, 0);
@@ -113,8 +112,12 @@ void CCrossSectionApp::InitScene()
 	planePoints[5] = glm::vec3(0, 0.5, 0);
 	planeNormals[6] = glm::vec3(0, 1, 0);
 	planePoints[6] = glm::vec3(0, -0.5, 0);
+	planeNormals[7] = glm::vec3(0, 0, 1);
+	planePoints[7] = glm::vec3(0, 0, -0.5);
 
 	crossSectionShader->bind();
+
+	numPlanes = 8;
 
 	glUniformMatrix4fv((*crossSectionShader)["world"], 1, GL_FALSE, &worldMat[0][0]);
 	glUniformMatrix4fv((*crossSectionShader)["viewProj"], 1, GL_FALSE, &viewProj[0][0]);
@@ -280,7 +283,7 @@ void CCrossSectionApp::SaveCrossSections(std::wstring path)
 	}
 	*vertex;
 
-	static const float epsilon = 0.001f;
+	static const float epsilon = 0.0000f;
 
 	struct vertexHash
 	{
