@@ -72,6 +72,8 @@ BEGIN_MESSAGE_MAP(CIsoSelectDlg, CDialogEx)
 	ON_WM_SIZE()
 	ON_WM_VSCROLL()
 	ON_BN_CLICKED(IDC_SAVE_OBJ_BUTTON, &CIsoSelectDlg::OnBnClickedSaveObjButton)
+	ON_WM_LBUTTONDOWN()
+	ON_WM_MOUSEMOVE()
 END_MESSAGE_MAP()
 
 
@@ -271,4 +273,25 @@ void CIsoSelectDlg::OnBnClickedSaveObjButton()
 	{
 		theApp.SaveMesh(std::wstring(dialog.GetPathName()));
 	}
+}
+
+
+void CIsoSelectDlg::OnLButtonDown(UINT nFlags, CPoint point)
+{
+	dragAnchor = point;
+
+	CDialogEx::OnLButtonDown(nFlags, point);
+}
+
+
+void CIsoSelectDlg::OnMouseMove(UINT nFlags, CPoint point)
+{
+	if(nFlags & MK_LBUTTON)
+	{
+		theApp.RotateView(point.y - dragAnchor.y, point.x - dragAnchor.x);
+
+		dragAnchor = point;
+	}
+
+	CDialogEx::OnMouseMove(nFlags, point);
 }

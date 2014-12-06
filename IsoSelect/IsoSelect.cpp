@@ -258,6 +258,15 @@ int CIsoSelectApp::ExitInstance()
 	return CWinApp::ExitInstance();
 }
 
+#ifdef _DEBUG
+#define printOpenGLError() printOglError(__FILE__, __LINE__)
+
+extern int printOglError(char *file, int line);
+
+#else
+#define printOpenGLError()
+#endif
+
 void CIsoSelectApp::SaveMesh(std::wstring path)
 {
 	static const GLsizeiptr max_ntriangles = dim * dim * dim * 5;
@@ -269,11 +278,13 @@ void CIsoSelectApp::SaveMesh(std::wstring path)
 	glGenBuffers(1, &tfBuf);
 	glBindBuffer(GL_ARRAY_BUFFER, tfBuf);
 	glBufferData(GL_ARRAY_BUFFER, max_nbytes, nullptr, GL_STATIC_DRAW);
+	printOpenGLError();
 
 	marchingCubesTF->bind();
 
 	glBeginQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN, tfPrimQuery);
-	
+
+	glBindBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, tfBuf);
 	glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, tfBuf);
 	glEnable(GL_RASTERIZER_DISCARD);
 	glBeginTransformFeedback(GL_TRIANGLES); 
@@ -286,8 +297,10 @@ void CIsoSelectApp::SaveMesh(std::wstring path)
 
 
 	glEndQuery(GL_TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN);
+	printOpenGLError();
 	GLuint nprimitives;
 	glGetQueryObjectuiv(tfPrimQuery, GL_QUERY_RESULT, &nprimitives);
+	printOpenGLError();
 
 	struct
 	{
@@ -346,6 +359,7 @@ void CIsoSelectApp::SaveMesh(std::wstring path)
 	std::vector<glm::uint32> normalIndices;
 
 	vertex = reinterpret_cast<decltype(vertex)>(glMapBuffer(GL_TRANSFORM_FEEDBACK_BUFFER, GL_READ_ONLY));
+	printOpenGLError();
 
 	glm::uint32 lastVertIndex = 0U;
 	glm::uint32 lastNormalIndex = 0U;
@@ -415,4 +429,12 @@ void CIsoSelectApp::SaveMesh(std::wstring path)
 
 	glDeleteBuffers(1, &tfBuf);
 	glDeleteQueries(1, &tfPrimQuery);
+}
+
+void CIsoSelectApp::RotateView(float pitch, float yaw)
+{
+	worldMat = glm::rotate(worldMat, pitch, glm::vec3(1, 0, 0));
+	worldMat = glm::rotate(worldMat, yaw, glm::vec3(0, 1, 0));
+	glUniformMatrix4fv((*marchingCubes)["world"], 1, GL_FALSE, &worldMat[0][0]);
+	update = true;
 }

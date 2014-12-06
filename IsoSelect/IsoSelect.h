@@ -34,6 +34,7 @@ public:
 	void InitScene();
 	void SetIsoSurface(float value);
 	void SaveMesh(std::wstring path);
+	void RotateView(float pitch, float yaw);
 
 // Overrides
 public:

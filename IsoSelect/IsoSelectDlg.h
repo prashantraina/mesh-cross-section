@@ -25,6 +25,7 @@ public:
 protected:
 	HICON m_hIcon;
 	HGLRC m_hGLRenderContext;
+	CPoint dragAnchor;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
@@ -43,4 +44,6 @@ public:
 	afx_msg void OnVScroll(UINT nSBCode, UINT nPos, CScrollBar* pScrollBar);
 	float m_selectedIso;
 	afx_msg void OnBnClickedSaveObjButton();
+	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnMouseMove(UINT nFlags, CPoint point);
 };
